@@ -88,15 +88,21 @@ function App() {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
+    console.log('🔍 Buscando:', searchQuery);
+    console.log('🌐 Backend URL:', BACKEND_URL);
+    
     try {
       const response = await axios.get(`${BACKEND_URL}/api/search`, {
         params: { q: searchQuery }
       });
+      console.log('✅ Resultados:', response.data.length, 'canciones');
       setSearchResults(response.data);
       setActiveTab('search');
     } catch (error) {
-      console.error('Error searching:', error);
-      alert('Error al buscar canciones. Verifica que la API de YouTube esté configurada.');
+      console.error('❌ Error searching:', error);
+      console.error('❌ Detalles:', error.response?.data);
+      const errorMsg = error.response?.data?.details || error.response?.data?.error || 'Error al buscar canciones';
+      alert(`Error: ${errorMsg}\n\nVerifica que:\n1. El backend esté funcionando\n2. La API de YouTube esté configurada en Render`);
     } finally {
       setIsSearching(false);
     }

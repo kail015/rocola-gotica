@@ -89,11 +89,16 @@ let connectedUsers = 0;
 app.get('/api/search', async (req, res) => {
   const { q } = req.query;
   
+  console.log('🔍 Búsqueda recibida:', q);
+  console.log('🔑 API Key configurada:', YOUTUBE_API_KEY ? 'Sí' : 'No');
+  
   if (!YOUTUBE_API_KEY) {
+    console.error('❌ YouTube API key NO configurada');
     return res.status(500).json({ error: 'YouTube API key not configured' });
   }
 
   try {
+    console.log('📡 Consultando YouTube API...');
     const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
       params: {
         part: 'snippet',
@@ -112,10 +117,14 @@ app.get('/api/search', async (req, res) => {
       channelTitle: item.snippet.channelTitle
     }));
 
+    console.log('✅ Encontrados', videos.length, 'videos');
     res.json(videos);
   } catch (error) {
-    console.error('YouTube API error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Error searching YouTube' });
+    console.error('❌ YouTube API error:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: 'Error searching YouTube',
+      details: error.response?.data?.error?.message || error.message
+    });
   }
 });
 
