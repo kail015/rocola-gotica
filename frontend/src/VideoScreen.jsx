@@ -12,13 +12,16 @@ function VideoScreen() {
 
   useEffect(() => {
     socket.on('current-song', (song) => {
+      console.log('📺 Canción actual recibida:', song?.title || 'ninguna');
       setCurrentSong(song);
     });
 
     socket.on('queue-update', (updatedQueue) => {
+      console.log('📋 Cola actualizada:', updatedQueue.length, 'canciones');
       setQueue(updatedQueue);
       // Auto-iniciar si hay canciones en cola y ninguna reproduciéndose
       if (updatedQueue.length > 0 && !currentSong) {
+        console.log('🚀 Auto-iniciando primera canción...');
         setTimeout(() => {
           socket.emit('play-next');
         }, 1000);
@@ -32,6 +35,7 @@ function VideoScreen() {
   }, [currentSong]);
 
   const handleSongEnd = () => {
+    console.log('🎵 Canción terminada, solicitando siguiente...');
     socket.emit('play-next');
   };
 
@@ -52,6 +56,7 @@ function VideoScreen() {
       {currentSong ? (
         <div className="fullscreen-video">
           <YouTube
+            key={currentSong.videoId}
             videoId={currentSong.videoId}
             opts={opts}
             onEnd={handleSongEnd}

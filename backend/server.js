@@ -197,6 +197,7 @@ io.on('connection', (socket) => {
 
   // Reproducir siguiente canción
   socket.on('play-next', () => {
+    console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
     if (queue.length > 0) {
       // Ordenar la cola por likes antes de tomar la primera
       queue.sort((a, b) => b.likes - a.likes);
@@ -205,11 +206,11 @@ io.on('connection', (socket) => {
       
       io.emit('current-song', currentSong);
       io.emit('queue-update', queue);
-      console.log(`Reproduciendo: ${currentSong.title} (${currentSong.likes} likes)`);
+      console.log(`✅ Reproduciendo: ${currentSong.title} (${currentSong.likes} likes). Quedan ${queue.length} en cola`);
     } else {
       currentSong = null;
       io.emit('current-song', null);
-      console.log('Cola vacía');
+      console.log('❌ Cola vacía - no hay siguiente canción');
     }
   });
 
