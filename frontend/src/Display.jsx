@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import './Display.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const socket = io(BACKEND_URL);
 
 function Display() {
   const [currentSong, setCurrentSong] = useState(null);
+  const socketRef = useRef(null);
   const [queue, setQueue] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -23,6 +23,10 @@ function Display() {
   }, [navigate]);
 
   useEffect(() => {
+    // Crear conexión socket
+    socketRef.current = io(BACKEND_URL);
+    const socket = socketRef.current;
+
     socket.on('current-song', (song) => {
       setCurrentSong(song);
     });
@@ -45,16 +49,19 @@ function Display() {
       socket.off('current-song');
       socket.off('queue-update');
       socket.off('chat-message');
+      socket.disconnect();
     };
   }, []);
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
     
-    socket.emit('chat-message', {
-      username: '🛡️ Administrador',
-      text: chatInput.trim()
-    });
+    if (socketRef.current) {
+      socketRef.current.emit('chat-message', {
+        username: '🛡️ Administrador',
+        text: chatInput.trim()
+      });
+    }
     
     setChatInput('');
   };
@@ -83,7 +90,7 @@ function Display() {
               </div>
               <button 
                 className="skip-btn"
-                onClick={() => socket.emit('play-next')}
+                onClick={() => socketRef.current?.emit('play-next')}
                 title="Saltar a siguiente canción"
               >
                 ⏭️ Siguiente
@@ -95,7 +102,7 @@ function Display() {
               {queue.length > 0 && (
                 <button 
                   className="play-next-btn"
-                  onClick={() => socket.emit('play-next')}
+                  onClick={() => socketRef.current?.emit('play-next')}
                 >
                   ▶️ Reproducir primera canción
                 </button>
@@ -112,7 +119,7 @@ function Display() {
                 className="clear-all-btn"
                 onClick={() => {
                   if (window.confirm('¿Eliminar todas las canciones de la cola?')) {
-                    socket.emit('clear-queue');
+                    socketRef.current?.emit('clear-queue');
                   }
                 }}
               >
@@ -131,7 +138,7 @@ function Display() {
                   <span className="next-likes">❤️ {song.likes}</span>
                   <button 
                     className="delete-song-btn"
-                    onClick={() => socket.emit('delete-song', song.id)}
+                    onClick={() => socketRef.current?.emit('delete-song', song.id)}
                     title="Eliminar canción"
                   >
                     ❌

@@ -192,10 +192,35 @@
   border-radius: 10px;
   padding: 0.8rem;
   max-width: 280px;
-  max-height: 300px;
+  max-height: 500px;
   overflow-y: auto;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.qr-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qr-code {
+  border-radius: 8px;
+  background: white;
+  padding: 0.3rem;
+}
+
+.qr-text {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #1e293b;
+  text-align: center;
 }
 
 .queue-sidebar h3 {

@@ -1,19 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import YouTube from 'react-youtube';
+import { QRCodeSVG } from 'qrcode.react';
 import './VideoScreen.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const socket = io(BACKEND_URL);
 
 function VideoScreen() {
   const [currentSong, setCurrentSong] = useState(null);
   const [queue, setQueue] = useState([]);
+  const socketRef = useRef(null);
+  const autoPlayTriggeredRef = useRef(false);
 
   useEffect(() => {
+    // Crear conexión socket solo una vez
+    socketRef.current = io(BACKEND_URL);
+    const socket = socketRef.current;
+
     socket.on('current-song', (song) => {
       console.log('📺 Canción actual recibida:', song?.title || 'ninguna');
       setCurrentSong(song);
+      // Resetear flag cuando hay una canción reproduciéndose
+      if (song) {
+        autoPlayTriggeredRef.current = false;
+      }
     });
 
     socket.on('queue-update', (updatedQueue) => {
@@ -24,15 +34,17 @@ function VideoScreen() {
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
+      socket.disconnect();
     };
   }, []);
 
   // Auto-iniciar primera canción cuando la cola tenga canciones y no haya nada reproduciéndose
   useEffect(() => {
-    if (queue.length > 0 && !currentSong) {
+    if (queue.length > 0 && !currentSong && !autoPlayTriggeredRef.current && socketRef.current) {
       console.log('🚀 Auto-iniciando primera canción...');
+      autoPlayTriggeredRef.current = true; // Marcar que ya se ejecutó
       const timer = setTimeout(() => {
-        socket.emit('play-next');
+        socketRef.current.emit('play-next');
       }, 1000);
       
       return () => clearTimeout(timer);
@@ -41,7 +53,9 @@ function VideoScreen() {
 
   const handleSongEnd = () => {
     console.log('🎵 Canción terminada, solicitando siguiente...');
-    socket.emit('play-next');
+    if (socketRef.current) {
+      socketRef.current.emit('play-next');
+    }
   };
 
   const opts = {
@@ -78,6 +92,16 @@ function VideoScreen() {
             </div>
             {queue.length > 0 && (
               <div className="queue-sidebar">
+                <div className="qr-section">
+                  <QRCodeSVG 
+                    value="https://rocola-gotica.netlify.app"
+                    size={120}
+                    level="H"
+                    includeMargin={true}
+                    className="qr-code"
+                  />
+                  <p className="qr-text">📱 Escanea para agregar canciones</p>
+                </div>
                 <h3>🎵 Próximas canciones ({queue.length})</h3>
                 <div className="queue-list-video">
                   {queue.map((song, index) => (

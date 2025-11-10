@@ -4,10 +4,10 @@ import axios from 'axios';
 import './App.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const socket = io(BACKEND_URL);
 
 function App() {
   const [queue, setQueue] = useState([]);
+  const socketRef = useRef(null);
   const [currentSong, setCurrentSong] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -39,6 +39,10 @@ function App() {
 
   // Socket listeners
   useEffect(() => {
+    // Crear conexión socket
+    socketRef.current = io(BACKEND_URL);
+    const socket = socketRef.current;
+
     socket.on('queue-update', (updatedQueue) => {
       setQueue(updatedQueue);
     });
@@ -63,6 +67,7 @@ function App() {
       socket.off('current-song');
       socket.off('chat-message');
       socket.off('users-count');
+      socket.disconnect();
     };
   }, []);
 
@@ -109,23 +114,29 @@ function App() {
   };
 
   const handleAddSong = (song) => {
-    socket.emit('add-song', song);
+    if (socketRef.current) {
+      socketRef.current.emit('add-song', song);
+    }
     setSearchResults([]);
     setSearchQuery('');
     setActiveTab('queue');
   };
 
   const handleLikeSong = (songId) => {
-    socket.emit('like-song', { songId, userId });
+    if (socketRef.current) {
+      socketRef.current.emit('like-song', { songId, userId });
+    }
   };
 
   const handleSendMessage = () => {
     if (!chatInput.trim() || !username.trim()) return;
     
-    socket.emit('chat-message', {
-      username: username.trim(),
-      text: chatInput.trim()
-    });
+    if (socketRef.current) {
+      socketRef.current.emit('chat-message', {
+        username: username.trim(),
+        text: chatInput.trim()
+      });
+    }
     
     setChatInput('');
   };
@@ -232,7 +243,7 @@ function App() {
                   {!currentSong && queue.length > 0 && (
                     <button 
                       className="play-first-btn"
-                      onClick={() => socket.emit('play-next')}
+                      onClick={() => socketRef.current?.emit('play-next')}
                     >
                       ▶️ Reproducir primera canción
                     </button>
