@@ -26,3 +26,4 @@ A social jukebox web application for bars where customers can:
 - Use Socket.io for real-time synchronization
 - Responsive design for mobile and desktop
 - Clean, maintainable code with comments
+const ADMIN_PASSWORD = 'Gotica123';  // Cambia esto por tu contraseña
