@@ -17,13 +17,19 @@ function VideoScreen() {
 
     socket.on('queue-update', (updatedQueue) => {
       setQueue(updatedQueue);
+      // Auto-iniciar si hay canciones en cola y ninguna reproduciéndose
+      if (updatedQueue.length > 0 && !currentSong) {
+        setTimeout(() => {
+          socket.emit('play-next');
+        }, 1000);
+      }
     });
 
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
     };
-  }, []);
+  }, [currentSong]);
 
   const handleSongEnd = () => {
     socket.emit('play-next');
