@@ -195,10 +195,10 @@
 
 .next-songs {
   position: fixed;
-  top: 80px;
+  top: 140px;
   right: 20px;
   width: 320px;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 240px);
   background: rgba(15, 23, 42, 0.92);
   border-radius: 8px;
   padding: 0.8rem;
