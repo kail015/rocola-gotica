@@ -27,6 +27,7 @@ function AdminAccess() {
     <div className="admin-access">
       <div className="admin-box">
         <h1>🔐 Acceso Administrativo</h1>
+        <p>ROCKOLA CIUDAD GÓTICA LICORES</p>
         <p>Ingresa la contraseña para acceder al display</p>
         
         <form onSubmit={handleSubmit}>

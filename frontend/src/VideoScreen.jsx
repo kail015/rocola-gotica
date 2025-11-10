@@ -90,7 +90,7 @@ function VideoScreen() {
         <div className="waiting-screen">
           <div className="waiting-content">
             <img src="/logogotica.jpg" alt="Ciudad Gótica Licores Bar" className="waiting-logo" />
-            <h1>🎵 Rocola Gótica</h1>
+            <h1>🎵 ROCKOLA CIUDAD GÓTICA LICORES</h1>
             <div className="waiting-animation">
               <div className="music-note">♪</div>
               <div className="music-note">♫</div>

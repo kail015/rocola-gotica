@@ -63,7 +63,7 @@ function Display() {
     <div className="display">
       <header className="display-header">
         <img src="/logogotica.jpg" alt="Ciudad Gótica Licores Bar" className="admin-logo" />
-        <h1>🎵 Rocola Gótica - Admin</h1>
+        <h1>🎵 ROCKOLA CIUDAD GÓTICA LICORES - Admin</h1>
         <div className="queue-count">
           {queue.length > 0 && `${queue.length} canciones en cola`}
         </div>

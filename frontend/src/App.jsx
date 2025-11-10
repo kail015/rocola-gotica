@@ -139,7 +139,7 @@ function App() {
         <div className="header-top">
           <img src="/logogotica.jpg" alt="Ciudad Gótica Licores Bar" className="logo" />
           <div className="header-text">
-            <h1>🎵 Rocola Gótica</h1>
+            <h1>🎵 ROCKOLA CIUDAD GÓTICA LICORES</h1>
             <span className="users-badge">👥 {usersCount} conectados</span>
           </div>
         </div>
