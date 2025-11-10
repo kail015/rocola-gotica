@@ -94,7 +94,7 @@ function VideoScreen() {
               <div className="queue-sidebar">
                 <div className="qr-section">
                   <QRCodeSVG 
-                    value="https://rocola-gotica.netlify.app"
+                    value="https://rockola-ciudad-gotica-licores.netlify.app"
                     size={120}
                     level="H"
                     includeMargin={true}
