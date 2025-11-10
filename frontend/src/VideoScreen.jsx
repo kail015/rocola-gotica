@@ -52,6 +52,9 @@ function VideoScreen() {
             className="youtube-fullscreen"
           />
           <div className="video-info-overlay">
+            <div className="video-header-logo">
+              <img src="/logogotica.jpg" alt="Ciudad Gótica" className="video-logo" />
+            </div>
             <div className="video-info-content">
               <h2>{currentSong.title}</h2>
               <p>{currentSong.channelTitle}</p>
