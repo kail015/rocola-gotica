@@ -19,20 +19,25 @@ function VideoScreen() {
     socket.on('queue-update', (updatedQueue) => {
       console.log('📋 Cola actualizada:', updatedQueue.length, 'canciones');
       setQueue(updatedQueue);
-      // Auto-iniciar si hay canciones en cola y ninguna reproduciéndose
-      if (updatedQueue.length > 0 && !currentSong) {
-        console.log('🚀 Auto-iniciando primera canción...');
-        setTimeout(() => {
-          socket.emit('play-next');
-        }, 1000);
-      }
     });
 
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
     };
-  }, [currentSong]);
+  }, []);
+
+  // Auto-iniciar primera canción cuando la cola tenga canciones y no haya nada reproduciéndose
+  useEffect(() => {
+    if (queue.length > 0 && !currentSong) {
+      console.log('🚀 Auto-iniciando primera canción...');
+      const timer = setTimeout(() => {
+        socket.emit('play-next');
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [queue, currentSong]);
 
   const handleSongEnd = () => {
     console.log('🎵 Canción terminada, solicitando siguiente...');
