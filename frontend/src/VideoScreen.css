@@ -1,0 +1,272 @@
+.video-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.fullscreen-video {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.youtube-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.youtube-fullscreen iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.video-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  padding: 2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  z-index: 10;
+}
+
+.video-info-content h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  color: #fff;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.video-info-content p {
+  margin: 0 0 0.8rem 0;
+  font-size: 1.2rem;
+  color: #94a3b8;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.video-likes {
+  display: inline-block;
+  background: rgba(231, 76, 60, 0.9);
+  padding: 0.5rem 1.2rem;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: white;
+}
+
+.next-indicator {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.6rem 1.5rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Pantalla de espera */
+.waiting-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+}
+
+.waiting-content {
+  text-align: center;
+  padding: 3rem;
+}
+
+.waiting-logo {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 5px solid #e74c3c;
+  box-shadow: 0 0 50px rgba(231, 76, 60, 0.8);
+  object-fit: cover;
+  margin-bottom: 2rem;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.waiting-content h1 {
+  font-size: 4rem;
+  color: #e74c3c;
+  margin: 0 0 2rem 0;
+  text-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 20px rgba(231, 76, 60, 0.4);
+  }
+  to {
+    text-shadow: 0 0 40px rgba(231, 76, 60, 0.8);
+  }
+}
+
+.waiting-animation {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.music-note {
+  font-size: 4rem;
+  color: #e74c3c;
+  animation: bounce 1s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.music-note:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.music-note:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.music-note:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+}
+
+.waiting-content p {
+  font-size: 2rem;
+  color: #94a3b8;
+  margin: 1rem 0;
+}
+
+.queue-info {
+  font-size: 1.5rem !important;
+  color: #e74c3c !important;
+  margin-top: 1.5rem !important;
+}
+
+/* Cola de reproducción en pantalla de video */
+.queue-sidebar {
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 10px;
+  padding: 0.8rem;
+  max-width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.queue-sidebar h3 {
+  margin: 0 0 0.6rem 0;
+  font-size: 1rem;
+  color: #e74c3c;
+  text-align: center;
+  border-bottom: 2px solid rgba(231, 76, 60, 0.5);
+  padding-bottom: 0.5rem;
+}
+
+.queue-list-video {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queue-item-video {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  background: rgba(26, 26, 46, 0.7);
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.queue-item-video:hover {
+  background: rgba(26, 26, 46, 0.9);
+  transform: translateX(3px);
+}
+
+.queue-number {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #e74c3c;
+  min-width: 20px;
+  text-align: center;
+}
+
+.queue-item-video img {
+  width: 45px;
+  height: 34px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.queue-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-song-info h4 {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.75rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-song-info p {
+  margin: 0;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-likes {
+  font-size: 0.75rem;
+  color: #e74c3c;
+  font-weight: bold;
+  background: rgba(231, 76, 60, 0.2);
+  padding: 0.2rem 0.4rem;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* Scrollbar personalizado para la cola */
+.queue-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.queue-sidebar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 10px;
+}
+
+.queue-sidebar::-webkit-scrollbar-thumb {
+  background: #e74c3c;
+  border-radius: 10px;
+}
+
+.queue-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #c0392b;
+}
