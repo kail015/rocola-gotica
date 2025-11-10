@@ -12,6 +12,7 @@ function Display() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [showChat, setShowChat] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -57,12 +58,28 @@ function Display() {
     if (!chatInput.trim()) return;
     
     if (socketRef.current) {
-      socketRef.current.emit('chat-message', {
+      const message = {
         username: '🛡️ Administrador',
         text: chatInput.trim()
-      });
+      };
+      
+      // Si está respondiendo a alguien, agregar referencia
+      if (replyingTo) {
+        message.replyTo = replyingTo;
+      }
+      
+      socketRef.current.emit('chat-message', message);
     }
     
+    setChatInput('');
+    setReplyingTo(null);
+  };
+
+  const handleReplyTo = (msg) => {
+    setReplyingTo({
+      username: msg.username,
+      text: msg.text
+    });
     setChatInput('');
   };
 
@@ -167,17 +184,40 @@ function Display() {
             <div className="admin-chat-messages">
               {chatMessages.map((msg) => (
                 <div key={msg.id} className="admin-chat-message">
-                  <strong>{msg.username}:</strong> {msg.text}
+                  {msg.replyTo && (
+                    <div className="reply-reference">
+                      <small>↩️ Respuesta a {msg.replyTo.username}:</small>
+                      <small className="reply-text">"{msg.replyTo.text}"</small>
+                    </div>
+                  )}
+                  <div className="message-header">
+                    <strong>{msg.username}:</strong> {msg.text}
+                    {!msg.username.includes('Administrador') && (
+                      <button 
+                        className="reply-btn"
+                        onClick={() => handleReplyTo(msg)}
+                        title="Responder a este mensaje"
+                      >
+                        ↩️
+                      </button>
+                    )}
+                  </div>
                   <span className="admin-chat-time">
                     {new Date(msg.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
               ))}
             </div>
+            {replyingTo && (
+              <div className="replying-banner">
+                <span>↩️ Respondiendo a <strong>{replyingTo.username}</strong>: "{replyingTo.text}"</span>
+                <button onClick={() => setReplyingTo(null)}>✕</button>
+              </div>
+            )}
             <div className="admin-chat-input">
               <input
                 type="text"
-                placeholder="Responder a los clientes..."
+                placeholder={replyingTo ? `Responder a ${replyingTo.username}...` : "Responder a los clientes..."}
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}

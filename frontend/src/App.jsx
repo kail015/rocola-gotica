@@ -316,6 +316,12 @@ function App() {
               <div className="chat-messages">
                 {chatMessages.map((msg) => (
                   <div key={msg.id} className="chat-message">
+                    {msg.replyTo && (
+                      <div className="client-reply-reference">
+                        <small>↩️ Respuesta a {msg.replyTo.username}:</small>
+                        <small className="reply-text">"{msg.replyTo.text}"</small>
+                      </div>
+                    )}
                     <strong>{msg.username}:</strong> {msg.text}
                     <span className="chat-time">
                       {new Date(msg.timestamp).toLocaleTimeString()}

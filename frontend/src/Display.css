@@ -505,6 +505,77 @@
   margin-top: 0.3rem;
 }
 
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.reply-btn {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.reply-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+.reply-reference {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.reply-reference small {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.reply-text {
+  font-style: italic;
+  color: #cbd5e1;
+}
+
+.replying-banner {
+  background: rgba(59, 130, 246, 0.2);
+  border-top: 2px solid #3b82f6;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+
+.replying-banner button {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.replying-banner button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .admin-chat-input {
   display: flex;
   gap: 0.5rem;
