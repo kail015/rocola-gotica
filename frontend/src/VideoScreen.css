@@ -1,7 +1,7 @@
 .video-screen {
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: linear-gradient(135deg, #0a1628 0%, #152238 50%, #0f1f3a 100%);
   overflow: hidden;
   position: fixed;
   top: 0;
@@ -49,37 +49,37 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  border: 4px solid #e74c3c;
-  box-shadow: 0 0 30px rgba(231, 76, 60, 0.8);
+  border: 4px solid #ff914d;
+  box-shadow: 0 0 30px rgba(255, 145, 77, 0.8);
   object-fit: cover;
   animation: pulse-rotate 4s ease-in-out infinite;
 }
 
 @keyframes pulse-rotate {
   0%, 100% {
-    box-shadow: 0 0 25px rgba(231, 76, 60, 0.6);
+    box-shadow: 0 0 25px rgba(255, 145, 77, 0.6);
     transform: rotateY(0deg);
   }
   25% {
-    box-shadow: 0 0 35px rgba(231, 76, 60, 0.9);
+    box-shadow: 0 0 35px rgba(255, 145, 77, 0.9);
     transform: rotateY(90deg);
   }
   50% {
-    box-shadow: 0 0 40px rgba(231, 76, 60, 1);
+    box-shadow: 0 0 40px rgba(255, 145, 77, 1);
     transform: rotateY(180deg);
   }
   75% {
-    box-shadow: 0 0 35px rgba(231, 76, 60, 0.9);
+    box-shadow: 0 0 35px rgba(255, 145, 77, 0.9);
     transform: rotateY(270deg);
   }
 }
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(231, 76, 60, 0.6);
+    box-shadow: 0 0 20px rgba(255, 145, 77, 0.6);
   }
   50% {
-    box-shadow: 0 0 30px rgba(231, 76, 60, 0.9);
+    box-shadow: 0 0 30px rgba(255, 145, 77, 0.9);
   }
 }
 
@@ -93,13 +93,13 @@
 .video-info-content p {
   margin: 0 0 0.8rem 0;
   font-size: 1.2rem;
-  color: #94a3b8;
+  color: #8b9cb5;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .video-likes {
   display: inline-block;
-  background: rgba(231, 76, 60, 0.9);
+  background: linear-gradient(135deg, #ff914d 0%, #ff7a2f 100%);
   padding: 0.5rem 1.2rem;
   border-radius: 25px;
   font-weight: bold;
@@ -109,8 +109,8 @@
 
 .next-indicator {
   font-size: 1.1rem;
-  color: #94a3b8;
-  background: rgba(15, 23, 42, 0.8);
+  color: #8b9cb5;
+  background: rgba(10, 22, 40, 0.8);
   padding: 0.6rem 1.5rem;
   border-radius: 20px;
   backdrop-filter: blur(10px);
@@ -123,7 +123,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+  background: linear-gradient(135deg, #0a1628 0%, #152238 50%, #0f1f3a 100%);
 }
 
 .waiting-content {
@@ -136,8 +136,8 @@
   width: 250px;
   height: 250px;
   border-radius: 50%;
-  border: 6px solid #e74c3c;
-  box-shadow: 0 0 60px rgba(231, 76, 60, 0.9);
+  border: 6px solid #ff914d;
+  box-shadow: 0 0 60px rgba(255, 145, 77, 0.9);
   object-fit: cover;
   margin-bottom: 2rem;
   animation: glow-rotate 6s ease-in-out infinite;
@@ -145,37 +145,37 @@
 
 @keyframes glow-rotate {
   0%, 100% {
-    box-shadow: 0 0 50px rgba(231, 76, 60, 0.7);
+    box-shadow: 0 0 50px rgba(255, 145, 77, 0.7);
     transform: rotateY(0deg);
   }
   25% {
-    box-shadow: 0 0 70px rgba(231, 76, 60, 0.95);
+    box-shadow: 0 0 70px rgba(255, 145, 77, 0.95);
     transform: rotateY(90deg);
   }
   50% {
-    box-shadow: 0 0 80px rgba(231, 76, 60, 1);
+    box-shadow: 0 0 80px rgba(255, 145, 77, 1);
     transform: rotateY(180deg);
   }
   75% {
-    box-shadow: 0 0 70px rgba(231, 76, 60, 0.95);
+    box-shadow: 0 0 70px rgba(255, 145, 77, 0.95);
     transform: rotateY(270deg);
   }
 }
 
 .waiting-content h1 {
   font-size: 4rem;
-  color: #e74c3c;
+  color: #ff914d;
   margin: 0 0 2rem 0;
-  text-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
+  text-shadow: 0 0 30px rgba(255, 145, 77, 0.6);
   animation: glow 2s ease-in-out infinite alternate;
 }
 
 @keyframes glow {
   from {
-    text-shadow: 0 0 20px rgba(231, 76, 60, 0.4);
+    text-shadow: 0 0 20px rgba(255, 145, 77, 0.4);
   }
   to {
-    text-shadow: 0 0 40px rgba(231, 76, 60, 0.8);
+    text-shadow: 0 0 40px rgba(255, 145, 77, 0.8);
   }
 }
 
@@ -188,7 +188,7 @@
 
 .music-note {
   font-size: 4rem;
-  color: #e74c3c;
+  color: #ff914d;
   animation: bounce 1s ease-in-out infinite;
   opacity: 0.8;
 }
@@ -216,13 +216,13 @@
 
 .waiting-content p {
   font-size: 2rem;
-  color: #94a3b8;
+  color: #8b9cb5;
   margin: 1rem 0;
 }
 
 .queue-info {
   font-size: 1.5rem !important;
-  color: #e74c3c !important;
+  color: #ff914d !important;
   margin-top: 1.5rem !important;
 }
 
@@ -235,7 +235,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
+  box-shadow: 0 8px 30px rgba(255, 145, 77, 0.4);
 }
 
 .qr-code-waiting {
@@ -254,14 +254,14 @@
 
 /* Cola de reproducción en pantalla de video */
 .queue-sidebar {
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(10, 22, 40, 0.92);
   border-radius: 10px;
   padding: 0.8rem;
   max-width: 280px;
   max-height: 500px;
   overflow-y: auto;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  border: 1px solid rgba(255, 145, 77, 0.3);
 }
 
 .qr-section {
@@ -292,9 +292,9 @@
 .queue-sidebar h3 {
   margin: 0 0 0.6rem 0;
   font-size: 1rem;
-  color: #e74c3c;
+  color: #ff914d;
   text-align: center;
-  border-bottom: 2px solid rgba(231, 76, 60, 0.5);
+  border-bottom: 2px solid rgba(255, 145, 77, 0.5);
   padding-bottom: 0.5rem;
 }
 
@@ -309,20 +309,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem;
-  background: rgba(26, 26, 46, 0.7);
+  background: rgba(21, 34, 56, 0.7);
   border-radius: 6px;
   transition: all 0.3s;
 }
 
 .queue-item-video:hover {
-  background: rgba(26, 26, 46, 0.9);
+  background: rgba(21, 34, 56, 0.9);
   transform: translateX(3px);
 }
 
 .queue-number {
   font-size: 0.9rem;
   font-weight: bold;
-  color: #e74c3c;
+  color: #ff914d;
   min-width: 20px;
   text-align: center;
 }
@@ -332,7 +332,7 @@
   height: 34px;
   border-radius: 4px;
   object-fit: cover;
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  border: 1px solid rgba(255, 145, 77, 0.3);
 }
 
 .queue-song-info {
@@ -352,7 +352,7 @@
 .queue-song-info p {
   margin: 0;
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: #8b9cb5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -360,9 +360,9 @@
 
 .queue-likes {
   font-size: 0.75rem;
-  color: #e74c3c;
+  color: #ff914d;
   font-weight: bold;
-  background: rgba(231, 76, 60, 0.2);
+  background: rgba(255, 145, 77, 0.2);
   padding: 0.2rem 0.4rem;
   border-radius: 10px;
   white-space: nowrap;
@@ -374,15 +374,15 @@
 }
 
 .queue-sidebar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(10, 22, 40, 0.5);
   border-radius: 10px;
 }
 
 .queue-sidebar::-webkit-scrollbar-thumb {
-  background: #e74c3c;
+  background: #ff914d;
   border-radius: 10px;
 }
 
 .queue-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #c0392b;
+  background: #ff7a2f;
 }
