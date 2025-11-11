@@ -722,38 +722,43 @@
   }
 
   .song-item {
-    padding: 0.7rem;
-    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    gap: 0.5rem;
   }
 
   .song-item img {
-    width: 70px;
-    height: 53px;
+    width: 100px;
+    height: 75px;
   }
 
   .song-position {
-    font-size: 1.2rem;
-    min-width: 30px;
+    font-size: 1rem;
+    min-width: 26px;
   }
 
-  .song-info h3 {
-    font-size: 0.95rem;
+  .song-info h4 {
+    font-size: 0.85rem;
   }
 
   .song-info p {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
   }
 
   .song-actions {
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: row;
+    gap: 0.4rem;
   }
 
   .like-btn,
   .add-btn,
+  .like-btn-search,
   .play-btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  .add-btn {
+    font-size: 1rem;
   }
 
   .menu-list {
@@ -776,24 +781,43 @@
   }
 
   .song-item {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0.4rem 0.5rem;
+    gap: 0.4rem;
   }
 
   .song-item img {
-    width: 100%;
-    height: auto;
-    max-height: 180px;
+    width: 85px;
+    height: 64px;
+  }
+
+  .song-position {
+    font-size: 0.9rem;
+    min-width: 24px;
+  }
+
+  .song-info h4 {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .song-info p {
+    font-size: 0.7rem;
   }
 
   .song-actions {
-    width: 100%;
-    justify-content: space-between;
+    gap: 0.3rem;
   }
 
   .like-btn,
+  .add-btn,
+  .like-btn-search {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
   .add-btn {
-    flex: 1;
+    font-size: 1rem;
+    padding: 0.35rem 0.65rem;
   }
 }
 
