@@ -126,7 +126,7 @@ function VideoScreen() {
         <div className="waiting-screen">
           <div className="waiting-content">
             <img src="/logogotica.png" alt="Ciudad Gótica Licores Bar" className="waiting-logo" />
-            <h1>🎵 ROCKOLA CIUDAD GÓTICA LICORES</h1>
+            <h1>ROCKOLA CIUDAD GÓTICA LICORES</h1>
             <div className="waiting-animation">
               <div className="music-note">♪</div>
               <div className="music-note">♫</div>
@@ -135,13 +135,13 @@ function VideoScreen() {
             <p>Esperando música...</p>
             {queue.length > 0 && (
               <p className="queue-info">
-                {queue.length} {queue.length === 1 ? 'canción' : 'canciones'} en cola
+                {queue.length} {queue.length === 1 ? 'canción en cola' : 'canciones en cola'}
               </p>
             )}
             <div className="waiting-qr">
               <QRCodeSVG 
                 value="https://rockola-ciudad-gotica-licores.netlify.app"
-                size={150}
+                size={160}
                 level="H"
                 includeMargin={true}
                 className="qr-code-waiting"
