@@ -385,6 +385,14 @@ function App() {
           )}
         </section>
       </main>
+      
+      <footer className="app-footer">
+        <div className="footer-content">
+          <span>Desarrollado por</span>
+          <img src="/lunatica-logo.png" alt="Lunatica App Solutions" className="lunatica-logo" />
+          <span>Lunatica App Solutions</span>
+        </div>
+      </footer>
     </div>
   );
 }

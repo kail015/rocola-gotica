@@ -436,6 +436,11 @@ function Display() {
 
       <footer className="display-footer">
         <p>Escanea el QR para agregar tus canciones favoritas | 📺 <a href="/video" target="_blank">Abrir pantalla de video</a></p>
+        <div className="footer-credits">
+          <span>Desarrollado por</span>
+          <img src="/lunatica-logo.png" alt="Lunatica App Solutions" className="lunatica-logo" />
+          <span>Lunatica App Solutions</span>
+        </div>
       </footer>
     </div>
   );

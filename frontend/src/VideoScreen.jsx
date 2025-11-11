@@ -148,6 +148,12 @@ function VideoScreen() {
               />
               <p className="qr-text-waiting">📱 Escanea para agregar canciones</p>
             </div>
+            
+            <div className="video-footer-credits">
+              <span>Desarrollado por</span>
+              <img src="/lunatica-logo.png" alt="Lunatica App Solutions" className="lunatica-logo-small" />
+              <span>Lunatica App Solutions</span>
+            </div>
           </div>
         </div>
       )}

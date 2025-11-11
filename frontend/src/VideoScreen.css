@@ -414,3 +414,27 @@
 .queue-sidebar::-webkit-scrollbar-thumb:hover {
   background: #ff7a2f;
 }
+
+/* Footer credits en pantalla de espera */
+.video-footer-credits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #8b9cb5;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+.lunatica-logo-small {
+  height: 25px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1.1);
+  transition: transform 0.3s;
+}
+
+.lunatica-logo-small:hover {
+  transform: scale(1.1);
+}
