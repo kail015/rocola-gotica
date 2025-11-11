@@ -123,8 +123,38 @@ function VideoScreen() {
       const randomVideo = await getRandomVideo();
       if (randomVideo) {
         setCurrentSong(randomVideo);
+      } else {
+        console.log('❌ No se pudo obtener video aleatorio, reintentando...');
+        setTimeout(async () => {
+          const retryVideo = await getRandomVideo();
+          if (retryVideo) {
+            setCurrentSong(retryVideo);
+          }
+        }, 2000);
       }
     }
+  };
+
+  const handleError = async (event) => {
+    console.error('❌ Error en reproductor de YouTube:', event);
+    console.log('🔄 Intentando siguiente canción...');
+    
+    // Si es modo aleatorio, intentar otro video
+    if (isRandomMode) {
+      const randomVideo = await getRandomVideo();
+      if (randomVideo) {
+        setCurrentSong(randomVideo);
+      }
+    } else if (queue.length > 0) {
+      // Si hay cola, pasar a la siguiente
+      if (socketRef.current) {
+        socketRef.current.emit('play-next');
+      }
+    }
+  };
+
+  const handleReady = (event) => {
+    console.log('✅ Reproductor listo:', currentSong?.title);
   };
 
   const opts = {
@@ -148,6 +178,8 @@ function VideoScreen() {
             videoId={currentSong.videoId}
             opts={opts}
             onEnd={handleSongEnd}
+            onError={handleError}
+            onReady={handleReady}
             className="youtube-fullscreen"
           />
           <div className="video-info-overlay">
