@@ -141,7 +141,7 @@ function VideoScreen() {
             <div className="waiting-qr">
               <QRCodeSVG 
                 value="https://rockola-ciudad-gotica-licores.netlify.app"
-                size={160}
+                size={140}
                 level="H"
                 includeMargin={true}
                 className="qr-code-waiting"
