@@ -105,19 +105,38 @@ app.get('/api/search', async (req, res) => {
         q: q,
         type: 'video',
         videoCategoryId: '10', // Música
-        maxResults: 50, // Aumentado de 10 a 50 resultados
+        videoEmbeddable: 'true', // Solo videos que se pueden embeber
+        maxResults: 50,
         key: YOUTUBE_API_KEY
       }
     });
 
-    const videos = response.data.items.map(item => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.medium.url,
-      channelTitle: item.snippet.channelTitle
-    }));
+    // Obtener IDs de videos para verificar detalles adicionales
+    const videoIds = response.data.items.map(item => item.id.videoId).join(',');
+    
+    // Obtener detalles de videos para verificar restricciones
+    const detailsResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+      params: {
+        part: 'snippet,contentDetails,status',
+        id: videoIds,
+        key: YOUTUBE_API_KEY
+      }
+    });
 
-    console.log('✅ Encontrados', videos.length, 'videos');
+    // Filtrar solo videos públicos y embebibles
+    const videos = detailsResponse.data.items
+      .filter(item => 
+        item.status.embeddable && 
+        item.status.publicStatsViewable !== false
+      )
+      .map(item => ({
+        id: item.id,
+        title: item.snippet.title,
+        thumbnail: item.snippet.thumbnails.medium.url,
+        channelTitle: item.snippet.channelTitle
+      }));
+
+    console.log('✅ Encontrados', videos.length, 'videos embebibles');
     res.json(videos);
   } catch (error) {
     console.error('❌ YouTube API error:', error.response?.data || error.message);

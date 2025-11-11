@@ -84,22 +84,36 @@ function VideoScreen() {
     try {
       const randomSearch = RANDOM_SEARCHES[Math.floor(Math.random() * RANDOM_SEARCHES.length)];
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(randomSearch)}&type=video&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${encodeURIComponent(randomSearch)}&type=video&videoEmbeddable=true&key=${YOUTUBE_API_KEY}`
       );
       const data = await response.json();
       
       if (data.items && data.items.length > 0) {
-        const randomIndex = Math.floor(Math.random() * data.items.length);
-        const video = data.items[randomIndex];
+        // Obtener IDs de videos
+        const videoIds = data.items.map(item => item.id.videoId).join(',');
         
-        return {
-          videoId: video.id.videoId,
-          title: video.snippet.title,
-          channelTitle: video.snippet.channelTitle,
-          thumbnail: video.snippet.thumbnails.default.url,
-          likes: 0,
-          isRandom: true
-        };
+        // Verificar detalles de embebibilidad
+        const detailsResponse = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${videoIds}&key=${YOUTUBE_API_KEY}`
+        );
+        const detailsData = await detailsResponse.json();
+        
+        // Filtrar solo videos embebibles
+        const embeddableVideos = detailsData.items.filter(item => item.status.embeddable);
+        
+        if (embeddableVideos.length > 0) {
+          const randomIndex = Math.floor(Math.random() * embeddableVideos.length);
+          const video = embeddableVideos[randomIndex];
+          
+          return {
+            videoId: video.id,
+            title: video.snippet.title,
+            channelTitle: video.snippet.channelTitle,
+            thumbnail: video.snippet.thumbnails.default.url,
+            likes: 0,
+            isRandom: true
+          };
+        }
       }
     } catch (error) {
       console.error('Error obteniendo video aleatorio:', error);
