@@ -1,5 +1,21 @@
 # Configuración de Nequi para Rockola Ciudad Gótica
 
+## ⚠️ IMPORTANTE: Actualizar número de Nequi
+
+**El número de Nequi actual es de PRUEBA: 300-123-4567**
+
+### Dónde cambiar tu número real:
+
+1. **Frontend** (`frontend/src/App.jsx` línea ~167):
+   ```javascript
+   const nequiPhone = '300-123-4567'; // ← CAMBIAR AQUÍ
+   ```
+
+2. **Banner del header** (`frontend/src/App.jsx` línea ~247):
+   ```jsx
+   Envía a Nequi: <strong>300-123-4567</strong> // ← CAMBIAR AQUÍ
+   ```
+
 ## Variables de entorno necesarias (.env):
 
 ```env
@@ -10,7 +26,7 @@ YOUTUBE_API_KEY=tu_api_key_de_youtube
 NEQUI_CLIENT_ID=tu_client_id
 NEQUI_CLIENT_SECRET=tu_client_secret
 NEQUI_API_KEY=tu_api_key
-NEQUI_BUSINESS_PHONE=3001234567
+NEQUI_BUSINESS_PHONE=3001234567  # ← Tu número real aquí
 NEQUI_ENV=sandbox
 ```
 

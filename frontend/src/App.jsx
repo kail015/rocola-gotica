@@ -155,9 +155,9 @@ function App() {
     if (!song) return;
 
     const confirm = window.confirm(
-      `¿Quieres que "${song.title}" suene primero?\n\n` +
-      `Costo: $1,000 COP\n\n` +
-      `Al confirmar el pago, tu canción pasará automáticamente a ser la primera en la cola.`
+      `🎵 ¿Quieres que "${song.title}" suene primero?\n\n` +
+      `💰 Costo: $1,000 COP\n\n` +
+      `⚡ Tu canción pasará AUTOMÁTICAMENTE a primera posición al confirmar el pago.`
     );
 
     if (!confirm) return;
@@ -167,20 +167,29 @@ function App() {
       const response = await axios.post(`${BACKEND_URL}/api/payment/priority`, { songId });
       
       if (response.data.success) {
-        const { reference, amount, qrData } = response.data;
+        const { reference, amount } = response.data;
+        const nequiPhone = '300-123-4567'; // Cambia esto por tu número real de Nequi
         
-        // Mostrar modal de pago
+        // Mostrar instrucciones detalladas de pago
         const paymentConfirm = window.confirm(
-          `Pago generado:\n\n` +
-          `Referencia: ${reference}\n` +
-          `Monto: $${amount}\n\n` +
-          `INSTRUCCIONES:\n` +
-          `1. Abre tu app Nequi\n` +
-          `2. Ve a "Enviar dinero"\n` +
-          `3. Envía a: ${process.env.VITE_NEQUI_PHONE || '300-123-4567'}\n` +
-          `4. Monto: $${amount}\n` +
-          `5. Referencia: ${reference}\n\n` +
-          `¿Ya realizaste el pago? (Para pruebas, haz clic en OK para simular)`
+          `💳 INSTRUCCIONES DE PAGO NEQUI\n\n` +
+          `📱 ENVIAR DINERO A:\n` +
+          `   ${nequiPhone}\n\n` +
+          `💵 MONTO:\n` +
+          `   $${amount.toLocaleString()} COP\n\n` +
+          `🔢 REFERENCIA (importante):\n` +
+          `   ${reference}\n\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `📋 PASOS:\n` +
+          `1️⃣ Abre tu app Nequi\n` +
+          `2️⃣ Toca "Enviar dinero"\n` +
+          `3️⃣ Ingresa el número: ${nequiPhone}\n` +
+          `4️⃣ Monto: $${amount}\n` +
+          `5️⃣ En mensaje/nota: ${reference}\n` +
+          `6️⃣ Confirma el envío\n\n` +
+          `⚡ Tu canción subirá AUTOMÁTICAMENTE al confirmar\n\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `[MODO PRUEBA: Click OK para simular pago]`
         );
 
         if (paymentConfirm) {
@@ -188,13 +197,13 @@ function App() {
           const confirmResponse = await axios.post(`${BACKEND_URL}/api/payment/simulate`, { reference });
           
           if (confirmResponse.data.success) {
-            alert('¡Pago confirmado! Tu canción ahora es la primera en la cola 🎵');
+            alert('✅ ¡PAGO CONFIRMADO!\n\n🎵 Tu canción ahora es la PRIMERA en la cola\n\n⚡ Sonará en cualquier momento');
           }
         }
       }
     } catch (error) {
       console.error('Error al procesar pago:', error);
-      alert('Error al procesar el pago. Intenta de nuevo.');
+      alert('❌ Error al procesar el pago.\n\nPor favor intenta de nuevo.');
     }
   };
 
@@ -234,6 +243,10 @@ function App() {
         <p className="header-subtitle">
           ⚠️ Las canciones con contenido explícito o que no vayan con la temática del bar podrán ser eliminadas
         </p>
+        <div className="nequi-info-banner">
+          💰 Haz que tu canción suene primero por <strong>$1,000</strong> • 
+          Envía a Nequi: <strong>300-123-4567</strong> ⚡
+        </div>
       </header>
 
       <main className="main-content">
