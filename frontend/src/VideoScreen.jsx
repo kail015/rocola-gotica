@@ -35,15 +35,17 @@ function VideoScreen() {
 
     socket.on('current-song', (song) => {
       console.log('📺 Canción actual recibida:', song?.title || 'ninguna');
-      // Solo actualizar si no estamos en modo aleatorio o si viene una canción real de la cola
-      if (!isRandomMode || song) {
-        setCurrentSong(song);
-      }
-      // Resetear flag cuando hay una canción reproduciéndose
+      
       if (song) {
+        // Si viene una canción real de la cola, usarla y salir del modo aleatorio
+        setCurrentSong(song);
         autoPlayTriggeredRef.current = false;
-        setIsRandomMode(false); // Salir del modo aleatorio si llega una canción de la cola
+        setIsRandomMode(false);
+      } else if (!isRandomMode) {
+        // Si viene null y NO estamos en modo aleatorio, actualizar a null
+        setCurrentSong(null);
       }
+      // Si viene null pero estamos en modo aleatorio, no hacer nada (mantener la canción aleatoria)
     });
 
     socket.on('queue-update', (updatedQueue) => {
@@ -122,27 +124,37 @@ function VideoScreen() {
   };
 
   const handleSongEnd = async () => {
-    console.log('🎵 Canción terminada, solicitando siguiente...');
+    console.log('🎵 Canción terminada');
+    console.log('📊 Estado: Cola:', queue.length, '| Modo aleatorio:', isRandomMode, '| Canción actual es aleatoria:', currentSong?.isRandom);
     
     // Si hay canciones en la cola, reproducir la siguiente
     if (queue.length > 0) {
+      console.log('✅ Hay canciones en cola, reproduciendo siguiente...');
       setIsRandomMode(false);
       if (socketRef.current) {
         socketRef.current.emit('play-next');
       }
     } else {
       // Si no hay canciones en la cola, reproducir aleatoriamente
-      console.log('🔀 Cola vacía, reproduciendo música aleatoria...');
+      console.log('🔀 Cola vacía, activando modo aleatorio...');
       setIsRandomMode(true);
+      
+      // Pequeño delay para asegurar que el modo aleatorio está activo
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const randomVideo = await getRandomVideo();
       if (randomVideo) {
+        console.log('✅ Video aleatorio obtenido:', randomVideo.title);
         setCurrentSong(randomVideo);
       } else {
-        console.log('❌ No se pudo obtener video aleatorio, reintentando...');
+        console.log('❌ No se pudo obtener video aleatorio, reintentando en 2 segundos...');
         setTimeout(async () => {
           const retryVideo = await getRandomVideo();
           if (retryVideo) {
+            console.log('✅ Video aleatorio obtenido (reintento):', retryVideo.title);
             setCurrentSong(retryVideo);
+          } else {
+            console.error('❌ No se pudo obtener video aleatorio después de reintentar');
           }
         }, 2000);
       }
