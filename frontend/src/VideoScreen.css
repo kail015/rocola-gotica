@@ -186,6 +186,32 @@
   margin-top: 1.5rem !important;
 }
 
+.waiting-qr {
+  margin-top: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
+}
+
+.qr-code-waiting {
+  border-radius: 10px;
+  background: white;
+  padding: 0.5rem;
+}
+
+.qr-text-waiting {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #1e293b;
+  text-align: center;
+}
+
 /* Cola de reproducción en pantalla de video */
 .queue-sidebar {
   background: rgba(15, 23, 42, 0.92);

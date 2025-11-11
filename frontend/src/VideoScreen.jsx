@@ -90,34 +90,36 @@ function VideoScreen() {
               <p>{currentSong.channelTitle}</p>
               <span className="video-likes">❤️ {currentSong.likes || 0}</span>
             </div>
-            {queue.length > 0 && (
-              <div className="queue-sidebar">
-                <div className="qr-section">
-                  <QRCodeSVG 
-                    value="https://rockola-ciudad-gotica-licores.netlify.app"
-                    size={120}
-                    level="H"
-                    includeMargin={true}
-                    className="qr-code"
-                  />
-                  <p className="qr-text">📱 Escanea para agregar canciones</p>
-                </div>
-                <h3>🎵 Próximas canciones ({queue.length})</h3>
-                <div className="queue-list-video">
-                  {queue.map((song, index) => (
-                    <div key={song.id} className="queue-item-video">
-                      <div className="queue-number">{index + 1}</div>
-                      <img src={song.thumbnail} alt={song.title} />
-                      <div className="queue-song-info">
-                        <h4>{song.title}</h4>
-                        <p>{song.channelTitle}</p>
-                      </div>
-                      <span className="queue-likes">❤️ {song.likes || 0}</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="queue-sidebar">
+              <div className="qr-section">
+                <QRCodeSVG 
+                  value="https://rockola-ciudad-gotica-licores.netlify.app"
+                  size={120}
+                  level="H"
+                  includeMargin={true}
+                  className="qr-code"
+                />
+                <p className="qr-text">📱 Escanea para agregar canciones</p>
               </div>
-            )}
+              {queue.length > 0 && (
+                <>
+                  <h3>🎵 Próximas canciones ({queue.length})</h3>
+                  <div className="queue-list-video">
+                    {queue.map((song, index) => (
+                      <div key={song.id} className="queue-item-video">
+                        <div className="queue-number">{index + 1}</div>
+                        <img src={song.thumbnail} alt={song.title} />
+                        <div className="queue-song-info">
+                          <h4>{song.title}</h4>
+                          <p>{song.channelTitle}</p>
+                        </div>
+                        <span className="queue-likes">❤️ {song.likes || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       ) : (
@@ -136,6 +138,16 @@ function VideoScreen() {
                 {queue.length} {queue.length === 1 ? 'canción' : 'canciones'} en cola
               </p>
             )}
+            <div className="waiting-qr">
+              <QRCodeSVG 
+                value="https://rockola-ciudad-gotica-licores.netlify.app"
+                size={150}
+                level="H"
+                includeMargin={true}
+                className="qr-code-waiting"
+              />
+              <p className="qr-text-waiting">📱 Escanea para agregar canciones</p>
+            </div>
           </div>
         </div>
       )}
