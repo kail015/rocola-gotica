@@ -37,6 +37,21 @@ function App() {
     }
   }, []);
 
+  // Keep-alive: mantener servidor activo
+  useEffect(() => {
+    // Hacer ping cada 5 minutos para evitar que Render ponga el servidor a dormir
+    const keepAlive = setInterval(async () => {
+      try {
+        await axios.get(`${BACKEND_URL}/api/ping`);
+        console.log('🏓 Ping enviado al servidor');
+      } catch (error) {
+        console.error('❌ Error en keep-alive:', error);
+      }
+    }, 5 * 60 * 1000); // Cada 5 minutos
+
+    return () => clearInterval(keepAlive);
+  }, []);
+
   // Socket listeners
   useEffect(() => {
     // Crear conexión socket

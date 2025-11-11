@@ -28,6 +28,22 @@ function VideoScreen() {
   const socketRef = useRef(null);
   const autoPlayTriggeredRef = useRef(false);
 
+  // Keep-alive: mantener servidor activo
+  useEffect(() => {
+    const keepAlive = setInterval(async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/ping`);
+        if (response.ok) {
+          console.log('🏓 Keep-alive ping enviado');
+        }
+      } catch (error) {
+        console.error('❌ Error en keep-alive:', error);
+      }
+    }, 5 * 60 * 1000); // Cada 5 minutos
+
+    return () => clearInterval(keepAlive);
+  }, []);
+
   useEffect(() => {
     // Crear conexión socket solo una vez
     socketRef.current = io(BACKEND_URL);
@@ -41,24 +57,39 @@ function VideoScreen() {
         setCurrentSong(song);
         autoPlayTriggeredRef.current = false;
         setIsRandomMode(false);
-      } else if (!isRandomMode) {
-        // Si viene null y NO estamos en modo aleatorio, actualizar a null
+      } else {
+        // Si viene null, resetear para permitir modo aleatorio o nuevo auto-play
         setCurrentSong(null);
+        autoPlayTriggeredRef.current = false;
       }
-      // Si viene null pero estamos en modo aleatorio, no hacer nada (mantener la canción aleatoria)
     });
 
     socket.on('queue-update', (updatedQueue) => {
       console.log('📋 Cola actualizada:', updatedQueue.length, 'canciones');
       setQueue(updatedQueue);
+      
+      // Si había una canción sonando y se borró la cola, resetear auto-play
+      if (updatedQueue.length === 0) {
+        autoPlayTriggeredRef.current = false;
+      }
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Socket conectado al servidor');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket desconectado del servidor');
     });
 
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
+      socket.off('connect');
+      socket.off('disconnect');
       socket.disconnect();
     };
-  }, [isRandomMode]);
+  }, []); // Solo se ejecuta una vez al montar
 
   // Auto-iniciar primera canción cuando la cola tenga canciones y no haya nada reproduciéndose
   useEffect(() => {

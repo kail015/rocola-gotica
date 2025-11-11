@@ -66,6 +66,8 @@ const writeData = (file, data) => {
 
 // Estado inicial
 let queue = readData(QUEUE_FILE, []);
+console.log(`📦 Cola cargada desde archivo: ${queue.length} canciones`);
+
 // Asegurar que todas las canciones en la cola tengan el array likedBy
 queue = queue.map(song => ({
   ...song,
@@ -85,6 +87,11 @@ let menu = readData(MENU_FILE, [
 let currentSong = null;
 let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
+
+// Log de inicio del servidor
+console.log('🚀 Servidor iniciando...');
+console.log(`📁 Directorio de datos: ${dataDir}`);
+console.log(`📝 Archivo de cola: ${QUEUE_FILE}`);
 
 // Función para ordenar la cola correctamente
 function sortQueue(queue) {
@@ -406,6 +413,23 @@ app.post('/api/payment/webhook', async (req, res) => {
 
 // API Routes
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    uptime: process.uptime(),
+    queue: queue.length,
+    currentSong: currentSong?.title || 'ninguna',
+    connectedUsers,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Endpoint para mantener el servidor activo (keep-alive)
+app.get('/api/ping', (req, res) => {
+  res.json({ pong: true, timestamp: Date.now() });
+});
+
 // Buscar canciones en YouTube
 app.get('/api/search', async (req, res) => {
   const { q } = req.query;
@@ -560,12 +584,16 @@ app.get('/api/chat', (req, res) => {
 // Socket.io eventos
 io.on('connection', (socket) => {
   connectedUsers++;
-  console.log(`Usuario conectado. Total: ${connectedUsers}`);
+  console.log(`✅ Usuario conectado. Total: ${connectedUsers} usuarios`);
   
-  // Enviar estado actual al nuevo usuario
+  // Enviar estado actual completo al nuevo usuario
   socket.emit('queue-update', queue);
   socket.emit('current-song', currentSong);
+  socket.emit('chat-history', chatMessages);
+  socket.emit('menu-update', menu);
   socket.emit('users-count', connectedUsers);
+  
+  console.log(`📤 Estado enviado: ${queue.length} canciones en cola, canción actual: ${currentSong?.title || 'ninguna'}`);
   
   // Notificar a todos sobre nuevo usuario
   io.emit('users-count', connectedUsers);
