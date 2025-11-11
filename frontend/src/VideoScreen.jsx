@@ -169,7 +169,7 @@ function VideoScreen() {
                   value="https://rockola-ciudad-gotica-licores.netlify.app"
                   size={120}
                   level="H"
-                  includeMargin={true}
+                  includeMargin={false}
                   className="qr-code"
                 />
                 <p className="qr-text">📱 Escanea para agregar canciones</p>
@@ -216,7 +216,7 @@ function VideoScreen() {
                 value="https://rockola-ciudad-gotica-licores.netlify.app"
                 size={140}
                 level="H"
-                includeMargin={true}
+                includeMargin={false}
                 className="qr-code-waiting"
               />
               <p className="qr-text-waiting">📱 Escanea para agregar canciones</p>
