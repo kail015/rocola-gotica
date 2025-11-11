@@ -300,24 +300,30 @@ function App() {
               {searchResults.length === 0 ? (
                 <p className="empty-message">Busca canciones para agregar a la cola</p>
               ) : (
-                searchResults.map((song) => (
+                searchResults.map((song, index) => (
                   <div key={song.id} className="song-item">
+                    <span className="song-position">#{index + 1}</span>
                     <img src={song.thumbnail} alt={song.title} />
                     <div className="song-info">
                       <h4>{song.title}</h4>
                       <p>{song.channelTitle}</p>
                     </div>
-                    <button 
-                      className="add-btn"
-                      onClick={() => handleAddSong({
-                        videoId: song.id,
-                        title: song.title,
-                        thumbnail: song.thumbnail,
-                        channelTitle: song.channelTitle
-                      })}
-                    >
-                      ➕ Agregar
-                    </button>
+                    <div className="song-actions">
+                      <button 
+                        className="add-btn"
+                        onClick={() => handleAddSong({
+                          videoId: song.id,
+                          title: song.title,
+                          thumbnail: song.thumbnail,
+                          channelTitle: song.channelTitle
+                        })}
+                      >
+                        ➕
+                      </button>
+                      <button className="like-btn-search">
+                        👍 0
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

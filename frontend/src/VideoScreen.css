@@ -297,9 +297,9 @@
 }
 
 .qr-code-waiting {
-  border-radius: 8px;
+  border-radius: 6px;
   background: white;
-  padding: 0.4rem;
+  padding: 0.2rem;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -337,9 +337,9 @@
 }
 
 .qr-code {
-  border-radius: 6px;
+  border-radius: 4px;
   background: white;
-  padding: 0.25rem;
+  padding: 0.15rem;
 }
 
 .qr-text {
