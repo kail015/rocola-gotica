@@ -221,23 +221,31 @@ function VideoScreen() {
                 />
                 <p className="qr-text">📱 Escanea para agregar canciones</p>
               </div>
-              {queue.length > 0 && (
-                <>
-                  <h3>🎵 Próximas canciones ({queue.length})</h3>
-                  <div className="queue-list-video">
-                    {queue.map((song, index) => (
-                      <div key={song.id} className="queue-item-video">
-                        <div className="queue-number">{index + 1}</div>
-                        <img src={song.thumbnail} alt={song.title} />
-                        <div className="queue-song-info">
-                          <h4>{song.title}</h4>
-                          <p>{song.channelTitle}</p>
-                        </div>
-                        <span className="queue-likes">❤️ {song.likes || 0}</span>
+              
+              <h3 className="queue-title">🎵 Cola de Reproducción ({queue.length})</h3>
+              
+              {queue.length > 0 ? (
+                <div className="queue-list-video">
+                  {queue.map((song, index) => (
+                    <div key={song.id} className={`queue-item-video ${song.paidPriority ? 'priority-queue' : ''}`}>
+                      <div className="queue-number">#{index + 1}</div>
+                      <img src={song.thumbnail} alt={song.title} />
+                      <div className="queue-song-info">
+                        <h4>
+                          {song.paidPriority && <span className="priority-badge-small">⚡</span>}
+                          {song.title}
+                        </h4>
+                        <p>{song.channelTitle}</p>
                       </div>
-                    ))}
-                  </div>
-                </>
+                      <span className="queue-likes">❤️ {song.likes || 0}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-queue-message">
+                  <p>🎶 No hay canciones en cola</p>
+                  <p className="hint-text">Escanea el QR para agregar</p>
+                </div>
               )}
             </div>
           </div>

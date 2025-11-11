@@ -168,7 +168,7 @@ function App() {
       
       if (response.data.success) {
         const { reference, amount } = response.data;
-        const nequiPhone = '300-123-4567'; // Cambia esto por tu número real de Nequi
+        const nequiPhone = '3208504177'; // Número de Nequi de Ciudad Gótica Licores
         
         // Mostrar instrucciones detalladas de pago
         const paymentConfirm = window.confirm(
@@ -245,7 +245,7 @@ function App() {
         </p>
         <div className="nequi-info-banner">
           💰 Haz que tu canción suene primero por <strong>$1,000</strong> • 
-          Envía a Nequi: <strong>300-123-4567</strong> ⚡
+          Envía a Nequi: <strong>3208504177</strong> ⚡
         </div>
       </header>
 
