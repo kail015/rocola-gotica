@@ -105,7 +105,7 @@ app.get('/api/search', async (req, res) => {
         q: q,
         type: 'video',
         videoCategoryId: '10', // Música
-        maxResults: 10,
+        maxResults: 50, // Aumentado de 10 a 50 resultados
         key: YOUTUBE_API_KEY
       }
     });
