@@ -1,6 +1,11 @@
 .display {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a1628 0%, #152238 50%, #0f1f3a 100%);
+  background: linear-gradient(135deg, rgba(10, 22, 40, 0.95) 0%, rgba(21, 34, 56, 0.95) 50%, rgba(15, 31, 58, 0.95) 100%),
+              url('/fondo-gotica.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #fff;
   display: flex;
   flex-direction: column;
