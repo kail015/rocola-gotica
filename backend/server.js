@@ -86,6 +86,28 @@ let currentSong = null;
 let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
 
+// Función para ordenar la cola correctamente
+function sortQueue(queue) {
+  return queue.sort((a, b) => {
+    // 1. Canciones con prioridad pagada van primero (ordenadas por timestamp)
+    if (a.paidPriority && b.paidPriority) {
+      return a.paymentTimestamp - b.paymentTimestamp; // Primera en pagar = primera en cola
+    }
+    if (a.paidPriority) return -1; // a va antes
+    if (b.paidPriority) return 1;  // b va antes
+    
+    // 2. Canciones con priority (likes) van después (ordenadas por likes)
+    if (a.priority && b.priority) {
+      return b.likes - a.likes; // Más likes primero
+    }
+    if (a.priority) return -1;
+    if (b.priority) return 1;
+    
+    // 3. Canciones normales al final (ordenadas por likes)
+    return b.likes - a.likes;
+  });
+}
+
 // API Routes
 
 // Iniciar pago de prioridad para una canción
@@ -559,7 +581,7 @@ io.on('connection', (socket) => {
     };
     
     queue.push(newSong);
-    queue.sort((a, b) => b.likes - a.likes);
+    sortQueue(queue);
     writeData(QUEUE_FILE, queue);
     
     io.emit('queue-update', queue);
@@ -583,7 +605,14 @@ io.on('connection', (socket) => {
         song.likes++;
       }
       
-      queue.sort((a, b) => b.likes - a.likes);
+      // Marcar como priority si tiene likes (pero NO paidPriority)
+      if (song.likes > 0 && !song.paidPriority) {
+        song.priority = true;
+      } else if (song.likes === 0 && !song.paidPriority) {
+        song.priority = false;
+      }
+      
+      sortQueue(queue);
       writeData(QUEUE_FILE, queue);
       
       io.emit('queue-update', queue);
@@ -595,14 +624,16 @@ io.on('connection', (socket) => {
   socket.on('play-next', () => {
     console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
     if (queue.length > 0) {
-      // Ordenar la cola por likes antes de tomar la primera
-      queue.sort((a, b) => b.likes - a.likes);
+      // Ordenar la cola correctamente (prioritarias primero, luego por likes)
+      sortQueue(queue);
       currentSong = queue.shift();
       writeData(QUEUE_FILE, queue);
       
       io.emit('current-song', currentSong);
       io.emit('queue-update', queue);
-      console.log(`✅ Reproduciendo: ${currentSong.title} (${currentSong.likes} likes). Quedan ${queue.length} en cola`);
+      
+      const priorityType = currentSong.paidPriority ? '💰 PAGADA' : (currentSong.priority ? '❤️ LIKES' : '🎵 NORMAL');
+      console.log(`✅ Reproduciendo: ${currentSong.title} [${priorityType}]. Quedan ${queue.length} en cola`);
     } else {
       currentSong = null;
       io.emit('current-song', null);

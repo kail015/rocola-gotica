@@ -170,51 +170,55 @@ function App() {
         const { reference, amount } = response.data;
         const nequiPhone = '3208504177'; // Número de Nequi de Ciudad Gótica Licores
         
-        // Mostrar instrucciones de pago
+        // Copiar referencia al clipboard
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(reference).catch(() => {});
+        }
+
+        // Mostrar instrucciones de pago en consola y como notificación
+        console.log(`
+💳 PAGO GENERADO - REFERENCIA: ${reference}
+📱 Enviar a Nequi: ${nequiPhone}
+💵 Monto: $${amount}
+        `);
+
         alert(
-          `💳 PAGO GENERADO - SIGUE ESTOS PASOS:\n\n` +
-          `📱 ENVIAR DINERO A:\n` +
-          `   ${nequiPhone}\n\n` +
-          `💵 MONTO:\n` +
-          `   $${amount.toLocaleString()} COP\n\n` +
-          `🔢 REFERENCIA (MUY IMPORTANTE):\n` +
-          `   ${reference}\n\n` +
-          `━━━━━━━━━━━━━━━━━━━━\n` +
-          `📋 PASOS:\n` +
-          `1️⃣ Abre tu app Nequi\n` +
-          `2️⃣ Toca "Enviar dinero"\n` +
-          `3️⃣ Número: ${nequiPhone}\n` +
-          `4️⃣ Monto: $${amount}\n` +
-          `5️⃣ En mensaje/nota: ${reference}\n` +
-          `6️⃣ Confirma el envío en Nequi\n\n` +
-          `⚡ Tu canción subirá AUTOMÁTICAMENTE\n` +
-          `cuando se confirme el pago (1-2 minutos)\n\n` +
-          `⏳ Mantén esta pantalla abierta\n` +
-          `Te notificaremos cuando se confirme`
+          `✅ PAGO GENERADO\n\n` +
+          `📱 Envía a Nequi: ${nequiPhone}\n` +
+          `💵 Monto: $${amount.toLocaleString()}\n` +
+          `🔢 Referencia: ${reference}\n` +
+          `(La referencia se copió al portapapeles)\n\n` +
+          `⚡ Tu canción subirá automáticamente cuando se confirme el pago`
         );
 
         // Iniciar verificación periódica del pago
+        let checksCount = 0;
+        const maxChecks = 120; // 10 minutos (120 * 5 segundos)
+        
         const checkInterval = setInterval(async () => {
+          checksCount++;
+          
           try {
             const statusResponse = await axios.get(`${BACKEND_URL}/api/payment/status/${reference}`);
             
             if (statusResponse.data.paid) {
               clearInterval(checkInterval);
-              alert('✅ ¡PAGO CONFIRMADO!\n\n🎵 Tu canción ahora es PRIORITARIA\n\n⚡ Sonará muy pronto');
+              alert('✅ ¡PAGO CONFIRMADO!\n\n🎵 Tu canción ahora es PRIORITARIA');
             }
           } catch (error) {
             console.error('Error verificando pago:', error);
           }
-        }, 5000); // Verificar cada 5 segundos
 
-        // Detener verificación después de 10 minutos
-        setTimeout(() => {
-          clearInterval(checkInterval);
-        }, 600000);
+          // Detener después del tiempo máximo
+          if (checksCount >= maxChecks) {
+            clearInterval(checkInterval);
+            console.log('Verificación de pago finalizada por timeout');
+          }
+        }, 5000); // Verificar cada 5 segundos
       }
     } catch (error) {
       console.error('Error al procesar pago:', error);
-      alert('❌ Error al procesar el pago.\n\nPor favor intenta de nuevo.');
+      alert('❌ Error al procesar el pago. Por favor intenta de nuevo.');
     }
   };
 
