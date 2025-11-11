@@ -37,19 +37,29 @@ function Display() {
     });
 
     socket.on('chat-message', (message) => {
+      // Admin ve todos los mensajes
+      setChatMessages(prev => [...prev, message]);
+    });
+
+    socket.on('admin-chat-message', (message) => {
+      // Mensajes enviados por el admin
       setChatMessages(prev => [...prev, message]);
     });
 
     // Cargar mensajes existentes
     fetch(`${BACKEND_URL}/api/chat`)
       .then(res => res.json())
-      .then(data => setChatMessages(data))
+      .then(data => {
+        // Admin ve todos los mensajes
+        setChatMessages(data);
+      })
       .catch(err => console.error('Error loading chat:', err));
 
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
       socket.off('chat-message');
+      socket.off('admin-chat-message');
       socket.disconnect();
     };
   }, []);
@@ -78,7 +88,8 @@ function Display() {
   const handleReplyTo = (msg) => {
     setReplyingTo({
       username: msg.username,
-      text: msg.text
+      text: msg.text,
+      userId: msg.userId // Importante: incluir el userId del cliente
     });
     setChatInput('');
   };

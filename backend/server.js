@@ -229,7 +229,10 @@ io.on('connection', (socket) => {
       id: Date.now().toString(),
       username: message.username || 'Anónimo',
       text: message.text,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      userId: message.userId, // ID del cliente que envía
+      replyTo: message.replyTo, // Si es respuesta del admin, contiene info del destinatario
+      isAdmin: message.username.includes('Administrador')
     };
     
     chatMessages.push(newMessage);
@@ -240,7 +243,17 @@ io.on('connection', (socket) => {
     }
     
     writeData(CHAT_FILE, chatMessages);
-    io.emit('chat-message', newMessage);
+    
+    // Si es un mensaje del admin con respuesta específica, enviarlo solo a ese usuario y al admin
+    if (newMessage.isAdmin && newMessage.replyTo && newMessage.replyTo.userId) {
+      // Enviar al admin (todos los sockets admin)
+      io.emit('admin-chat-message', newMessage);
+      // Enviar al cliente específico
+      io.emit('private-chat-message', { message: newMessage, targetUserId: newMessage.replyTo.userId });
+    } else {
+      // Mensajes de clientes van solo al admin y al propio cliente
+      io.emit('chat-message', newMessage);
+    }
   });
 
   // Eliminar canción específica (admin)

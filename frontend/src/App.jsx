@@ -52,7 +52,18 @@ function App() {
     });
 
     socket.on('chat-message', (message) => {
-      setChatMessages(prev => [...prev, message]);
+      // Solo agregar si es mensaje del propio usuario o del admin respondiendo a este usuario
+      if (message.userId === userId || 
+          (message.isAdmin && (!message.replyTo || message.replyTo.userId === userId))) {
+        setChatMessages(prev => [...prev, message]);
+      }
+    });
+
+    socket.on('private-chat-message', ({ message, targetUserId }) => {
+      // Solo mostrar si es para este usuario
+      if (targetUserId === userId) {
+        setChatMessages(prev => [...prev, message]);
+      }
     });
 
     socket.on('users-count', (count) => {
@@ -66,10 +77,11 @@ function App() {
       socket.off('queue-update');
       socket.off('current-song');
       socket.off('chat-message');
+      socket.off('private-chat-message');
       socket.off('users-count');
       socket.disconnect();
     };
-  }, []);
+  }, [userId]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -82,7 +94,12 @@ function App() {
         axios.get(`${BACKEND_URL}/api/chat`),
         axios.get(`${BACKEND_URL}/api/menu`)
       ]);
-      setChatMessages(chatRes.data);
+      // Filtrar mensajes: solo los del usuario actual o respuestas del admin para este usuario
+      const filteredMessages = chatRes.data.filter(msg => 
+        msg.userId === userId || 
+        (msg.isAdmin && (!msg.replyTo || msg.replyTo.userId === userId))
+      );
+      setChatMessages(filteredMessages);
       setMenu(menuRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -134,7 +151,8 @@ function App() {
     if (socketRef.current) {
       socketRef.current.emit('chat-message', {
         username: username.trim(),
-        text: chatInput.trim()
+        text: chatInput.trim(),
+        userId: userId
       });
     }
     
