@@ -150,6 +150,54 @@ function App() {
     }
   };
 
+  const handlePriorityPayment = async (songId) => {
+    const song = queue.find(s => s.id === songId);
+    if (!song) return;
+
+    const confirm = window.confirm(
+      `¿Quieres que "${song.title}" suene primero?\n\n` +
+      `Costo: $1,000 COP\n\n` +
+      `Al confirmar el pago, tu canción pasará automáticamente a ser la primera en la cola.`
+    );
+
+    if (!confirm) return;
+
+    try {
+      // Iniciar pago
+      const response = await axios.post(`${BACKEND_URL}/api/payment/priority`, { songId });
+      
+      if (response.data.success) {
+        const { reference, amount, qrData } = response.data;
+        
+        // Mostrar modal de pago
+        const paymentConfirm = window.confirm(
+          `Pago generado:\n\n` +
+          `Referencia: ${reference}\n` +
+          `Monto: $${amount}\n\n` +
+          `INSTRUCCIONES:\n` +
+          `1. Abre tu app Nequi\n` +
+          `2. Ve a "Enviar dinero"\n` +
+          `3. Envía a: ${process.env.VITE_NEQUI_PHONE || '300-123-4567'}\n` +
+          `4. Monto: $${amount}\n` +
+          `5. Referencia: ${reference}\n\n` +
+          `¿Ya realizaste el pago? (Para pruebas, haz clic en OK para simular)`
+        );
+
+        if (paymentConfirm) {
+          // Simular confirmación de pago (en producción esto vendría del webhook de Nequi)
+          const confirmResponse = await axios.post(`${BACKEND_URL}/api/payment/simulate`, { reference });
+          
+          if (confirmResponse.data.success) {
+            alert('¡Pago confirmado! Tu canción ahora es la primera en la cola 🎵');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error al procesar pago:', error);
+      alert('Error al procesar el pago. Intenta de nuevo.');
+    }
+  };
+
   const handleSendMessage = () => {
     if (!chatInput.trim() || !username.trim()) return;
     
@@ -272,14 +320,26 @@ function App() {
                     </button>
                   )}
                   {queue.map((song, index) => (
-                    <div key={song.id} className="song-item">
+                    <div key={song.id} className={`song-item ${song.paidPriority ? 'priority-song' : ''}`}>
                       <span className="song-position">#{index + 1}</span>
                       <img src={song.thumbnail} alt={song.title} />
                       <div className="song-info">
-                        <h4>{song.title}</h4>
+                        <h4>
+                          {song.paidPriority && <span className="priority-badge">⚡ PRIORITARIA</span>}
+                          {song.title}
+                        </h4>
                         <p>{song.channelTitle}</p>
                       </div>
                       <div className="song-actions">
+                        {index > 0 && !song.paidPriority && (
+                          <button 
+                            className="priority-btn"
+                            onClick={() => handlePriorityPayment(song.id)}
+                            title="Pagar $1,000 para que suene primero"
+                          >
+                            ⚡ $1,000
+                          </button>
+                        )}
                         <button 
                           className={`like-btn ${hasSongLiked(song) ? 'liked' : ''}`}
                           onClick={() => handleLikeSong(song.id)}

@@ -7,6 +7,8 @@ import axios from 'axios';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid';
+import { generateNequiPayment, checkPaymentStatus } from './nequi-payment.js';
 
 dotenv.config();
 
@@ -82,6 +84,118 @@ let menu = readData(MENU_FILE, [
 
 let currentSong = null;
 let connectedUsers = 0;
+let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
+
+// API Routes
+
+// Iniciar pago de prioridad para una canción
+app.post('/api/payment/priority', async (req, res) => {
+  const { songId } = req.body;
+  
+  const song = queue.find(s => s.id === songId);
+  if (!song) {
+    return res.status(404).json({ error: 'Canción no encontrada' });
+  }
+  
+  // Generar referencia única
+  const reference = `PRIORITY-${uuidv4().slice(0, 8).toUpperCase()}`;
+  const amount = 1000; // $1,000 COP
+  
+  // Guardar pago pendiente
+  pendingPayments[reference] = {
+    songId,
+    amount,
+    timestamp: Date.now(),
+    songTitle: song.title
+  };
+  
+  // Nota: Por ahora devolvemos un código de pago simulado
+  // En producción, aquí se llamaría a generateNequiPayment()
+  res.json({
+    success: true,
+    reference,
+    amount,
+    paymentUrl: `nequi://payment/${reference}`,
+    qrData: JSON.stringify({
+      type: 'nequi_payment',
+      reference,
+      amount,
+      phone: process.env.NEQUI_BUSINESS_PHONE || '3001234567'
+    })
+  });
+});
+
+// Confirmar pago y dar prioridad a la canción
+app.post('/api/payment/confirm', async (req, res) => {
+  const { reference } = req.body;
+  
+  const payment = pendingPayments[reference];
+  if (!payment) {
+    return res.status(404).json({ error: 'Pago no encontrado' });
+  }
+  
+  // Buscar la canción en la cola
+  const songIndex = queue.findIndex(s => s.id === payment.songId);
+  if (songIndex === -1) {
+    return res.status(404).json({ error: 'Canción no encontrada en la cola' });
+  }
+  
+  // Mover la canción al inicio de la cola
+  const [song] = queue.splice(songIndex, 1);
+  song.priority = true;
+  song.paidPriority = true;
+  queue.unshift(song);
+  
+  writeData(QUEUE_FILE, queue);
+  io.emit('queue-update', queue);
+  
+  // Eliminar pago pendiente
+  delete pendingPayments[reference];
+  
+  console.log(`✅ Pago confirmado: ${song.title} movida al inicio de la cola`);
+  
+  res.json({
+    success: true,
+    message: 'Tu canción ahora es la primera en la cola',
+    song: song
+  });
+});
+
+// Simular pago (solo para desarrollo/testing)
+app.post('/api/payment/simulate', async (req, res) => {
+  const { reference } = req.body;
+  
+  const payment = pendingPayments[reference];
+  if (!payment) {
+    return res.status(404).json({ error: 'Pago no encontrado' });
+  }
+  
+  // Buscar la canción en la cola
+  const songIndex = queue.findIndex(s => s.id === payment.songId);
+  if (songIndex === -1) {
+    return res.status(404).json({ error: 'Canción no encontrada en la cola' });
+  }
+  
+  // Mover la canción al inicio de la cola
+  const [song] = queue.splice(songIndex, 1);
+  song.priority = true;
+  song.paidPriority = true;
+  queue.unshift(song);
+  
+  writeData(QUEUE_FILE, queue);
+  io.emit('queue-update', queue);
+  
+  // Eliminar pago pendiente
+  delete pendingPayments[reference];
+  
+  console.log(`✅ Pago SIMULADO confirmado: ${song.title} movida al inicio de la cola`);
+  
+  res.json({
+    success: true,
+    message: 'Tu canción ahora es la primera en la cola (PAGO SIMULADO)',
+    song: song
+  });
+});
 
 // API Routes
 
