@@ -35,10 +35,14 @@ function VideoScreen() {
 
     socket.on('current-song', (song) => {
       console.log('📺 Canción actual recibida:', song?.title || 'ninguna');
-      setCurrentSong(song);
+      // Solo actualizar si no estamos en modo aleatorio o si viene una canción real de la cola
+      if (!isRandomMode || song) {
+        setCurrentSong(song);
+      }
       // Resetear flag cuando hay una canción reproduciéndose
       if (song) {
         autoPlayTriggeredRef.current = false;
+        setIsRandomMode(false); // Salir del modo aleatorio si llega una canción de la cola
       }
     });
 
@@ -52,7 +56,7 @@ function VideoScreen() {
       socket.off('queue-update');
       socket.disconnect();
     };
-  }, []);
+  }, [isRandomMode]);
 
   // Auto-iniciar primera canción cuando la cola tenga canciones y no haya nada reproduciéndose
   useEffect(() => {
@@ -67,16 +71,13 @@ function VideoScreen() {
     }
   }, [queue, currentSong]);
 
-  // Detener modo aleatorio y cambiar a canción de la cola cuando hay nuevas canciones
+  // Detener modo aleatorio cuando hay canciones en cola (pero no interrumpir reproducción actual)
   useEffect(() => {
-    if (queue.length > 0 && isRandomMode && currentSong?.isRandom) {
-      console.log('🎵 Nueva canción agregada, saliendo del modo aleatorio...');
+    if (queue.length > 0 && isRandomMode) {
+      console.log('🎵 Canciones agregadas a la cola, modo aleatorio se desactivará al terminar esta canción');
       setIsRandomMode(false);
-      if (socketRef.current) {
-        socketRef.current.emit('play-next');
-      }
     }
-  }, [queue, isRandomMode, currentSong]);
+  }, [queue, isRandomMode]);
 
   // Función para obtener un video aleatorio de YouTube
   const getRandomVideo = async () => {
