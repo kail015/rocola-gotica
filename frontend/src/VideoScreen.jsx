@@ -83,7 +83,7 @@ function VideoScreen() {
           />
           <div className="video-info-overlay">
             <div className="video-header-logo">
-              <img src="/logogotica.jpg" alt="Ciudad Gótica" className="video-logo" />
+              <img src="/logogotica.png" alt="Ciudad Gótica" className="video-logo" />
             </div>
             <div className="video-info-content">
               <h2>{currentSong.title}</h2>
@@ -125,7 +125,7 @@ function VideoScreen() {
       ) : (
         <div className="waiting-screen">
           <div className="waiting-content">
-            <img src="/logogotica.jpg" alt="Ciudad Gótica Licores Bar" className="waiting-logo" />
+            <img src="/logogotica.png" alt="Ciudad Gótica Licores Bar" className="waiting-logo" />
             <h1>🎵 ROCKOLA CIUDAD GÓTICA LICORES</h1>
             <div className="waiting-animation">
               <div className="music-note">♪</div>
