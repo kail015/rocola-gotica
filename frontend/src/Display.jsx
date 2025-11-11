@@ -13,6 +13,10 @@ function Display() {
   const [chatInput, setChatInput] = useState('');
   const [showChat, setShowChat] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [menu, setMenu] = useState([]);
+  const [showMenuManager, setShowMenuManager] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [newItem, setNewItem] = useState({ name: '', price: '', category: 'Bebidas' });
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -46,6 +50,10 @@ function Display() {
       setChatMessages(prev => [...prev, message]);
     });
 
+    socket.on('menu-update', (updatedMenu) => {
+      setMenu(updatedMenu);
+    });
+
     // Cargar mensajes existentes
     fetch(`${BACKEND_URL}/api/chat`)
       .then(res => res.json())
@@ -55,11 +63,18 @@ function Display() {
       })
       .catch(err => console.error('Error loading chat:', err));
 
+    // Cargar menú
+    fetch(`${BACKEND_URL}/api/menu`)
+      .then(res => res.json())
+      .then(data => setMenu(data))
+      .catch(err => console.error('Error loading menu:', err));
+
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
       socket.off('chat-message');
       socket.off('admin-chat-message');
+      socket.off('menu-update');
       socket.disconnect();
     };
   }, []);
@@ -92,6 +107,78 @@ function Display() {
       userId: msg.userId // Importante: incluir el userId del cliente
     });
     setChatInput('');
+  };
+
+  // Funciones para gestionar el menú
+  const handleAddItem = async () => {
+    if (!newItem.name || !newItem.price) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/menu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+      
+      if (response.ok) {
+        setNewItem({ name: '', price: '', category: 'Bebidas' });
+        alert('Producto agregado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error adding item:', error);
+      alert('Error al agregar producto');
+    }
+  };
+
+  const handleUpdateItem = async (id) => {
+    if (!editingItem.name || !editingItem.price) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/menu/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingItem)
+      });
+      
+      if (response.ok) {
+        setEditingItem(null);
+        alert('Producto actualizado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error updating item:', error);
+      alert('Error al actualizar producto');
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/menu/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        alert('Producto eliminado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      alert('Error al eliminar producto');
+    }
+  };
+
+  const startEditing = (item) => {
+    setEditingItem({ ...item });
+  };
+
+  const cancelEditing = () => {
+    setEditingItem(null);
   };
 
   return (
@@ -177,6 +264,15 @@ function Display() {
           </div>
         )}
 
+        {/* Botón para gestionar menú */}
+        <button 
+          className="menu-toggle-btn"
+          onClick={() => setShowMenuManager(!showMenuManager)}
+          title="Gestionar Menú"
+        >
+          🍽️ Menú
+        </button>
+
         {/* Chat flotante para admin */}
         <button 
           className="chat-toggle-btn"
@@ -234,6 +330,105 @@ function Display() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
               <button onClick={handleSendMessage}>Enviar</button>
+            </div>
+          </div>
+        )}
+
+        {/* Panel de gestión del menú */}
+        {showMenuManager && (
+          <div className="menu-manager-widget">
+            <div className="menu-manager-header">
+              <h3>🍽️ Gestionar Menú</h3>
+              <button onClick={() => setShowMenuManager(false)}>✕</button>
+            </div>
+            
+            <div className="menu-manager-content">
+              {/* Formulario para agregar nuevo producto */}
+              <div className="add-item-form">
+                <h4>➕ Agregar Producto</h4>
+                <input
+                  type="text"
+                  placeholder="Nombre del producto"
+                  value={newItem.name}
+                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                />
+                <input
+                  type="number"
+                  placeholder="Precio"
+                  value={newItem.price}
+                  onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                />
+                <select
+                  value={newItem.category}
+                  onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                >
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Comida">Comida</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Cocteles">Cocteles</option>
+                </select>
+                <button onClick={handleAddItem} className="add-item-btn">
+                  Agregar Producto
+                </button>
+              </div>
+
+              {/* Lista de productos existentes */}
+              <div className="menu-items-list">
+                <h4>📋 Productos Actuales</h4>
+                {menu.map((item) => (
+                  <div key={item.id} className="menu-manager-item">
+                    {editingItem && editingItem.id === item.id ? (
+                      // Modo edición
+                      <div className="edit-item-form">
+                        <input
+                          type="text"
+                          value={editingItem.name}
+                          onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                        />
+                        <input
+                          type="number"
+                          value={editingItem.price}
+                          onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
+                        />
+                        <select
+                          value={editingItem.category}
+                          onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                        >
+                          <option value="Bebidas">Bebidas</option>
+                          <option value="Comida">Comida</option>
+                          <option value="Snacks">Snacks</option>
+                          <option value="Cocteles">Cocteles</option>
+                        </select>
+                        <div className="edit-actions">
+                          <button onClick={() => handleUpdateItem(item.id)} className="save-btn">
+                            ✓ Guardar
+                          </button>
+                          <button onClick={cancelEditing} className="cancel-btn">
+                            ✕ Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Modo vista
+                      <>
+                        <div className="item-info">
+                          <h5>{item.name}</h5>
+                          <p className="item-category">{item.category}</p>
+                          <p className="item-price">${item.price.toLocaleString()}</p>
+                        </div>
+                        <div className="item-actions">
+                          <button onClick={() => startEditing(item)} className="edit-btn" title="Editar">
+                            ✏️
+                          </button>
+                          <button onClick={() => handleDeleteItem(item.id)} className="delete-btn" title="Eliminar">
+                            🗑️
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

@@ -143,6 +143,75 @@ app.get('/api/menu', (req, res) => {
   res.json(menu);
 });
 
+// Agregar producto al menú
+app.post('/api/menu', (req, res) => {
+  const { name, price, category } = req.body;
+  
+  if (!name || !price || !category) {
+    return res.status(400).json({ error: 'Nombre, precio y categoría son requeridos' });
+  }
+  
+  const newItem = {
+    id: Date.now(),
+    name,
+    price: parseFloat(price),
+    category
+  };
+  
+  menu.push(newItem);
+  writeData(MENU_FILE, menu);
+  
+  // Emitir actualización a todos los clientes
+  io.emit('menu-update', menu);
+  
+  res.json(newItem);
+});
+
+// Actualizar producto del menú
+app.put('/api/menu/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, price, category } = req.body;
+  
+  const index = menu.findIndex(item => item.id === parseInt(id));
+  
+  if (index === -1) {
+    return res.status(404).json({ error: 'Producto no encontrado' });
+  }
+  
+  menu[index] = {
+    ...menu[index],
+    name: name || menu[index].name,
+    price: price !== undefined ? parseFloat(price) : menu[index].price,
+    category: category || menu[index].category
+  };
+  
+  writeData(MENU_FILE, menu);
+  
+  // Emitir actualización a todos los clientes
+  io.emit('menu-update', menu);
+  
+  res.json(menu[index]);
+});
+
+// Eliminar producto del menú
+app.delete('/api/menu/:id', (req, res) => {
+  const { id } = req.params;
+  
+  const index = menu.findIndex(item => item.id === parseInt(id));
+  
+  if (index === -1) {
+    return res.status(404).json({ error: 'Producto no encontrado' });
+  }
+  
+  const deletedItem = menu.splice(index, 1)[0];
+  writeData(MENU_FILE, menu);
+  
+  // Emitir actualización a todos los clientes
+  io.emit('menu-update', menu);
+  
+  res.json(deletedItem);
+});
+
 // Obtener chat
 app.get('/api/chat', (req, res) => {
   res.json(chatMessages.slice(-50)); // Últimos 50 mensajes

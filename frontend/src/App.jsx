@@ -70,6 +70,10 @@ function App() {
       setUsersCount(count);
     });
 
+    socket.on('menu-update', (updatedMenu) => {
+      setMenu(updatedMenu);
+    });
+
     // Cargar datos iniciales
     loadInitialData();
 
@@ -79,6 +83,7 @@ function App() {
       socket.off('chat-message');
       socket.off('private-chat-message');
       socket.off('users-count');
+      socket.off('menu-update');
       socket.disconnect();
     };
   }, [userId]);

@@ -625,3 +625,301 @@
   color: #2563eb;
   text-decoration: underline;
 }
+
+/* Botón de gestión de menú */
+.menu-toggle-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #ff914d 0%, #ff7a2f 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(255, 145, 77, 0.4);
+  transition: all 0.3s;
+}
+
+.menu-toggle-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 145, 77, 0.6);
+}
+
+/* Panel de gestión del menú */
+.menu-manager-widget {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 500px;
+  max-height: 600px;
+  background: rgba(10, 22, 40, 0.95);
+  border-radius: 12px;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 2px solid #1e3a5f;
+}
+
+.menu-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 145, 77, 0.2);
+  border-bottom: 2px solid #1e3a5f;
+  border-radius: 12px 12px 0 0;
+}
+
+.menu-manager-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ff914d;
+}
+
+.menu-manager-header button {
+  background: transparent;
+  border: none;
+  color: #8b9cb5;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  transition: all 0.2s;
+}
+
+.menu-manager-header button:hover {
+  color: #ff914d;
+  transform: rotate(90deg);
+}
+
+.menu-manager-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Formulario agregar producto */
+.add-item-form {
+  background: rgba(21, 34, 56, 0.8);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #1e3a5f;
+}
+
+.add-item-form h4 {
+  margin: 0 0 1rem 0;
+  color: #ff914d;
+  font-size: 1rem;
+}
+
+.add-item-form input,
+.add-item-form select {
+  width: 100%;
+  padding: 0.7rem;
+  margin-bottom: 0.8rem;
+  border: 2px solid #1e3a5f;
+  border-radius: 6px;
+  background: #0a1628;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.add-item-form input:focus,
+.add-item-form select:focus {
+  outline: none;
+  border-color: #ff914d;
+}
+
+.add-item-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #ff914d 0%, #ff7a2f 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-item-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 145, 77, 0.4);
+}
+
+/* Lista de productos */
+.menu-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.menu-items-list h4 {
+  margin: 0 0 0.5rem 0;
+  color: #ff914d;
+  font-size: 1rem;
+}
+
+.menu-manager-item {
+  background: rgba(21, 34, 56, 0.8);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #1e3a5f;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.menu-manager-item:hover {
+  border-color: #ff914d;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-info h5 {
+  margin: 0 0 0.3rem 0;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.item-category {
+  margin: 0 0 0.3rem 0;
+  color: #8b9cb5;
+  font-size: 0.8rem;
+  background: rgba(255, 145, 77, 0.2);
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+}
+
+.item-price {
+  margin: 0;
+  color: #ff914d;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 0.5rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.edit-btn {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid #3b82f6;
+}
+
+.edit-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(1.1);
+}
+
+.delete-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+/* Formulario de edición */
+.edit-item-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.edit-item-form input,
+.edit-item-form select {
+  padding: 0.6rem;
+  border: 2px solid #1e3a5f;
+  border-radius: 6px;
+  background: #0a1628;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.edit-item-form input:focus,
+.edit-item-form select:focus {
+  outline: none;
+  border-color: #ff914d;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-btn,
+.cancel-btn {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-btn {
+  background: #22c55e;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #16a34a;
+}
+
+.cancel-btn {
+  background: #64748b;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #475569;
+}
+
+/* Scrollbar para menu manager */
+.menu-manager-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-manager-content::-webkit-scrollbar-track {
+  background: rgba(21, 34, 56, 0.3);
+  border-radius: 3px;
+}
+
+.menu-manager-content::-webkit-scrollbar-thumb {
+  background: #ff914d;
+  border-radius: 3px;
+}
+
+.menu-manager-content::-webkit-scrollbar-thumb:hover {
+  background: #ff7a2f;
+}
