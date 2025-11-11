@@ -88,6 +88,16 @@ async function getAccessToken() {
  * Consultar estado de un pago
  */
 export async function checkPaymentStatus(reference) {
+  // Si no hay credenciales configuradas, retornar pago no confirmado
+  if (!NEQUI_CONFIG.clientId || !NEQUI_CONFIG.clientSecret || !NEQUI_CONFIG.apiKey) {
+    console.warn('⚠️  Credenciales de Nequi no configuradas. Modo desarrollo.');
+    return {
+      success: false,
+      paid: false,
+      error: 'Credenciales de Nequi no configuradas'
+    };
+  }
+
   try {
     const token = await getAccessToken();
     
@@ -108,12 +118,14 @@ export async function checkPaymentStatus(reference) {
     return {
       success: true,
       status: response.data.status,
-      paid: response.data.status === 'APPROVED'
+      paid: response.data.status === 'APPROVED',
+      reference: reference
     };
   } catch (error) {
-    console.error('Error consultando estado de pago:', error);
+    console.error('Error consultando estado de pago:', error.response?.data || error.message);
     return {
       success: false,
+      paid: false,
       error: error.message
     };
   }

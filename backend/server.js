@@ -161,6 +161,94 @@ app.post('/api/payment/confirm', async (req, res) => {
   });
 });
 
+// Verificar estado de pago (polling endpoint)
+app.get('/api/payment/status/:reference', async (req, res) => {
+  const { reference } = req.params;
+  
+  const payment = pendingPayments[reference];
+  if (!payment) {
+    return res.status(404).json({ 
+      error: 'Pago no encontrado',
+      paid: false 
+    });
+  }
+  
+  try {
+    // Verificar pago con Nequi API
+    const paymentStatus = await checkPaymentStatus(reference);
+    
+    if (paymentStatus.paid) {
+      // Buscar la canción en la cola
+      const songIndex = queue.findIndex(s => s.id === payment.songId);
+      if (songIndex === -1) {
+        delete pendingPayments[reference];
+        return res.status(404).json({ 
+          error: 'Canción no encontrada en la cola',
+          paid: false 
+        });
+      }
+      
+      // Remover canción de su posición actual
+      const [song] = queue.splice(songIndex, 1);
+      
+      // Marcar como pago prioritario con timestamp
+      song.priority = true;
+      song.paidPriority = true;
+      song.paymentTimestamp = Date.now();
+      song.paymentReference = reference;
+      
+      // Insertar en la cola ordenada por prioridad
+      // Las canciones con paidPriority van primero, ordenadas por paymentTimestamp
+      const firstNonPriorityIndex = queue.findIndex(s => !s.paidPriority);
+      
+      if (firstNonPriorityIndex === -1) {
+        // No hay canciones prioritarias, agregar al inicio
+        queue.unshift(song);
+      } else {
+        // Encontrar posición correcta entre canciones prioritarias
+        let insertIndex = 0;
+        for (let i = 0; i < firstNonPriorityIndex; i++) {
+          if (queue[i].paymentTimestamp && song.paymentTimestamp > queue[i].paymentTimestamp) {
+            insertIndex = i + 1;
+          } else {
+            break;
+          }
+        }
+        queue.splice(insertIndex, 0, song);
+      }
+      
+      writeData(QUEUE_FILE, queue);
+      io.emit('queue-update', queue);
+      
+      // Eliminar pago pendiente
+      delete pendingPayments[reference];
+      
+      console.log(`✅ Pago confirmado: ${song.title} (ref: ${reference}) - Posición en cola de prioridad`);
+      
+      return res.json({
+        paid: true,
+        success: true,
+        message: 'Pago confirmado. Tu canción tiene prioridad',
+        song: song,
+        position: queue.indexOf(song) + 1
+      });
+    } else {
+      // Pago aún pendiente
+      return res.json({
+        paid: false,
+        message: 'Esperando confirmación de pago',
+        reference: reference
+      });
+    }
+  } catch (error) {
+    console.error('Error verificando pago:', error);
+    return res.status(500).json({ 
+      error: 'Error verificando estado del pago',
+      paid: false 
+    });
+  }
+});
+
 // Simular pago (solo para desarrollo/testing)
 app.post('/api/payment/simulate', async (req, res) => {
   const { reference } = req.body;
@@ -176,11 +264,31 @@ app.post('/api/payment/simulate', async (req, res) => {
     return res.status(404).json({ error: 'Canción no encontrada en la cola' });
   }
   
-  // Mover la canción al inicio de la cola
+  // Remover canción de su posición actual
   const [song] = queue.splice(songIndex, 1);
+  
+  // Marcar como pago prioritario con timestamp
   song.priority = true;
   song.paidPriority = true;
-  queue.unshift(song);
+  song.paymentTimestamp = Date.now();
+  song.paymentReference = reference;
+  
+  // Insertar en la cola ordenada por prioridad
+  const firstNonPriorityIndex = queue.findIndex(s => !s.paidPriority);
+  
+  if (firstNonPriorityIndex === -1) {
+    queue.unshift(song);
+  } else {
+    let insertIndex = 0;
+    for (let i = 0; i < firstNonPriorityIndex; i++) {
+      if (queue[i].paymentTimestamp && song.paymentTimestamp > queue[i].paymentTimestamp) {
+        insertIndex = i + 1;
+      } else {
+        break;
+      }
+    }
+    queue.splice(insertIndex, 0, song);
+  }
   
   writeData(QUEUE_FILE, queue);
   io.emit('queue-update', queue);
@@ -188,13 +296,90 @@ app.post('/api/payment/simulate', async (req, res) => {
   // Eliminar pago pendiente
   delete pendingPayments[reference];
   
-  console.log(`✅ Pago SIMULADO confirmado: ${song.title} movida al inicio de la cola`);
+  console.log(`✅ Pago SIMULADO confirmado: ${song.title} - Posición ${queue.indexOf(song) + 1}`);
   
   res.json({
     success: true,
-    message: 'Tu canción ahora es la primera en la cola (PAGO SIMULADO)',
-    song: song
+    message: 'Tu canción tiene prioridad (PAGO SIMULADO)',
+    song: song,
+    position: queue.indexOf(song) + 1
   });
+});
+
+// Webhook de Nequi (recibe notificaciones de pago en tiempo real)
+app.post('/api/payment/webhook', async (req, res) => {
+  try {
+    // Validar firma del webhook (seguridad)
+    const signature = req.headers['x-nequi-signature'];
+    const webhookSecret = process.env.NEQUI_WEBHOOK_SECRET || '';
+    
+    // Si hay secret configurado, validar firma
+    if (webhookSecret && signature) {
+      const { validateNequiWebhook } = await import('./nequi-payment.js');
+      const isValid = validateNequiWebhook(signature, req.body, webhookSecret);
+      if (!isValid) {
+        console.error('❌ Webhook Nequi: Firma inválida');
+        return res.status(401).json({ error: 'Firma inválida' });
+      }
+    }
+    
+    const { status, reference1, value } = req.body;
+    
+    console.log('📩 Webhook Nequi recibido:', { status, reference: reference1, value });
+    
+    // Solo procesar pagos aprobados
+    if (status === 'APPROVED') {
+      const reference = reference1;
+      const payment = pendingPayments[reference];
+      
+      if (payment) {
+        // Buscar la canción en la cola
+        const songIndex = queue.findIndex(s => s.id === payment.songId);
+        
+        if (songIndex !== -1) {
+          // Remover canción de su posición actual
+          const [song] = queue.splice(songIndex, 1);
+          
+          // Marcar como pago prioritario con timestamp
+          song.priority = true;
+          song.paidPriority = true;
+          song.paymentTimestamp = Date.now();
+          song.paymentReference = reference;
+          
+          // Insertar en la cola ordenada por prioridad
+          const firstNonPriorityIndex = queue.findIndex(s => !s.paidPriority);
+          
+          if (firstNonPriorityIndex === -1) {
+            queue.unshift(song);
+          } else {
+            let insertIndex = 0;
+            for (let i = 0; i < firstNonPriorityIndex; i++) {
+              if (queue[i].paymentTimestamp && song.paymentTimestamp > queue[i].paymentTimestamp) {
+                insertIndex = i + 1;
+              } else {
+                break;
+              }
+            }
+            queue.splice(insertIndex, 0, song);
+          }
+          
+          writeData(QUEUE_FILE, queue);
+          io.emit('queue-update', queue);
+          
+          // Eliminar pago pendiente
+          delete pendingPayments[reference];
+          
+          console.log(`✅ Webhook: Pago confirmado para ${song.title} (ref: ${reference})`);
+        }
+      }
+    }
+    
+    // Responder OK a Nequi
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Error procesando webhook Nequi:', error);
+    res.status(500).json({ error: 'Error interno' });
+  }
 });
 
 // API Routes
