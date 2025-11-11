@@ -115,6 +115,30 @@
   color: white;
 }
 
+.random-mode-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: white;
+  margin-bottom: 0.5rem;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
 .next-indicator {
   font-size: 0.8rem;
   color: #8b9cb5;

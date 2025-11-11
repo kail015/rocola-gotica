@@ -5,10 +5,26 @@ import { QRCodeSVG } from 'qrcode.react';
 import './VideoScreen.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const YOUTUBE_API_KEY = 'AIzaSyDBzDvHctztTDoOLD4wEE8fOQPY8nmmRac';
+
+// Lista de búsquedas aleatorias para música variada
+const RANDOM_SEARCHES = [
+  'música popular en español',
+  'música latina 2024',
+  'reggaeton hits',
+  'rock en español',
+  'salsa romántica',
+  'bachata hits',
+  'música electrónica',
+  'pop latino',
+  'música tropical',
+  'merengue clásico'
+];
 
 function VideoScreen() {
   const [currentSong, setCurrentSong] = useState(null);
   const [queue, setQueue] = useState([]);
+  const [isRandomMode, setIsRandomMode] = useState(false);
   const socketRef = useRef(null);
   const autoPlayTriggeredRef = useRef(false);
 
@@ -51,10 +67,62 @@ function VideoScreen() {
     }
   }, [queue, currentSong]);
 
-  const handleSongEnd = () => {
+  // Detener modo aleatorio y cambiar a canción de la cola cuando hay nuevas canciones
+  useEffect(() => {
+    if (queue.length > 0 && isRandomMode && currentSong?.isRandom) {
+      console.log('🎵 Nueva canción agregada, saliendo del modo aleatorio...');
+      setIsRandomMode(false);
+      if (socketRef.current) {
+        socketRef.current.emit('play-next');
+      }
+    }
+  }, [queue, isRandomMode, currentSong]);
+
+  // Función para obtener un video aleatorio de YouTube
+  const getRandomVideo = async () => {
+    try {
+      const randomSearch = RANDOM_SEARCHES[Math.floor(Math.random() * RANDOM_SEARCHES.length)];
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(randomSearch)}&type=video&key=${YOUTUBE_API_KEY}`
+      );
+      const data = await response.json();
+      
+      if (data.items && data.items.length > 0) {
+        const randomIndex = Math.floor(Math.random() * data.items.length);
+        const video = data.items[randomIndex];
+        
+        return {
+          videoId: video.id.videoId,
+          title: video.snippet.title,
+          channelTitle: video.snippet.channelTitle,
+          thumbnail: video.snippet.thumbnails.default.url,
+          likes: 0,
+          isRandom: true
+        };
+      }
+    } catch (error) {
+      console.error('Error obteniendo video aleatorio:', error);
+    }
+    return null;
+  };
+
+  const handleSongEnd = async () => {
     console.log('🎵 Canción terminada, solicitando siguiente...');
-    if (socketRef.current) {
-      socketRef.current.emit('play-next');
+    
+    // Si hay canciones en la cola, reproducir la siguiente
+    if (queue.length > 0) {
+      setIsRandomMode(false);
+      if (socketRef.current) {
+        socketRef.current.emit('play-next');
+      }
+    } else {
+      // Si no hay canciones en la cola, reproducir aleatoriamente
+      console.log('🔀 Cola vacía, reproduciendo música aleatoria...');
+      setIsRandomMode(true);
+      const randomVideo = await getRandomVideo();
+      if (randomVideo) {
+        setCurrentSong(randomVideo);
+      }
     }
   };
 
@@ -86,9 +154,14 @@ function VideoScreen() {
               <img src="/logogotica.png" alt="Ciudad Gótica" className="video-logo" />
             </div>
             <div className="video-info-content">
+              {isRandomMode && (
+                <div className="random-mode-badge">
+                  🔀 Reproducción Aleatoria
+                </div>
+              )}
               <h2>{currentSong.title}</h2>
               <p>{currentSong.channelTitle}</p>
-              <span className="video-likes">❤️ {currentSong.likes || 0}</span>
+              {!isRandomMode && <span className="video-likes">❤️ {currentSong.likes || 0}</span>}
             </div>
             <div className="queue-sidebar">
               <div className="qr-section">
