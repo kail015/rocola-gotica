@@ -88,6 +88,28 @@ let currentSong = null;
 let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
 
+// Caché de búsquedas de YouTube (reduce consumo de API)
+const searchCache = new Map();
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutos
+let apiCallsToday = 0;
+
+// Limpiar caché expirado cada 10 minutos
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  
+  for (const [key, value] of searchCache.entries()) {
+    if (now - value.timestamp >= CACHE_DURATION) {
+      searchCache.delete(key);
+      cleaned++;
+    }
+  }
+  
+  if (cleaned > 0) {
+    console.log(`🧹 Caché limpiado: ${cleaned} entradas eliminadas. Quedan: ${searchCache.size}`);
+  }
+}, 10 * 60 * 1000);
+
 // Log de inicio del servidor
 console.log('🚀 Servidor iniciando...');
 console.log(`📁 Directorio de datos: ${dataDir}`);
@@ -421,6 +443,8 @@ app.get('/health', (req, res) => {
     queue: queue.length,
     currentSong: currentSong?.title || 'ninguna',
     connectedUsers,
+    cacheSize: searchCache.size,
+    apiCallsToday,
     timestamp: new Date().toISOString()
   });
 });
@@ -428,6 +452,30 @@ app.get('/health', (req, res) => {
 // Endpoint para mantener el servidor activo (keep-alive)
 app.get('/api/ping', (req, res) => {
   res.json({ pong: true, timestamp: Date.now() });
+});
+
+// Endpoint para ver estadísticas de uso de API (solo admin)
+app.get('/api/stats', (req, res) => {
+  const cacheHitRate = apiCallsToday > 0 
+    ? ((searchCache.size / (searchCache.size + apiCallsToday)) * 100).toFixed(2)
+    : 0;
+    
+  res.json({
+    cache: {
+      size: searchCache.size,
+      maxAge: `${CACHE_DURATION / 1000 / 60} minutos`
+    },
+    api: {
+      callsToday: apiCallsToday,
+      estimatedUnitsUsed: apiCallsToday * 100,
+      quotaLimit: 10000,
+      quotaRemaining: Math.max(0, 10000 - (apiCallsToday * 100))
+    },
+    efficiency: {
+      cacheHitRate: `${cacheHitRate}%`,
+      savedCalls: searchCache.size
+    }
+  });
 });
 
 // Buscar canciones en YouTube
@@ -442,8 +490,27 @@ app.get('/api/search', async (req, res) => {
     return res.status(500).json({ error: 'YouTube API key not configured' });
   }
 
+  // Normalizar query para caché (minúsculas, sin espacios extras)
+  const cacheKey = q.toLowerCase().trim();
+  
+  // Verificar caché
+  if (searchCache.has(cacheKey)) {
+    const cached = searchCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (now - cached.timestamp < CACHE_DURATION) {
+      console.log('✅ Resultado de caché (ahorra cuota API)');
+      return res.json(cached.data);
+    } else {
+      // Caché expirado, eliminar
+      searchCache.delete(cacheKey);
+    }
+  }
+
   try {
     console.log('📡 Consultando YouTube API...');
+    apiCallsToday++; // Incrementar contador
+    
     const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
       params: {
         part: 'snippet',
@@ -482,9 +549,29 @@ app.get('/api/search', async (req, res) => {
       }));
 
     console.log('✅ Encontrados', videos.length, 'videos embebibles');
+    
+    // Guardar en caché
+    searchCache.set(cacheKey, {
+      data: videos,
+      timestamp: Date.now()
+    });
+    
+    console.log(`💾 Resultado guardado en caché (${searchCache.size} búsquedas en caché)`);
+    
     res.json(videos);
   } catch (error) {
     console.error('❌ YouTube API error:', error.response?.data || error.message);
+    
+    // Si es error de cuota excedida, informar al usuario
+    if (error.response?.data?.error?.errors?.[0]?.reason === 'quotaExceeded') {
+      console.error('🚫 CUOTA DE YOUTUBE EXCEDIDA - Se resetea a medianoche PT');
+      return res.status(429).json({ 
+        error: 'Cuota de búsquedas agotada',
+        message: 'Se han realizado demasiadas búsquedas hoy. Intenta nuevamente mañana o contacta al administrador.',
+        resetTime: 'Medianoche Pacific Time (PT)'
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Error searching YouTube',
       details: error.response?.data?.error?.message || error.message

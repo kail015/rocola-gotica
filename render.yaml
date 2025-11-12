@@ -1,0 +1,29 @@
+# Configuración de Render para Rockola Ciudad Gótica
+services:
+  # Backend - Node.js + Express + Socket.io
+  - type: web
+    name: rocola-gotica-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: YOUTUBE_API_KEY
+        value: AIzaSyDBzDvHctztTDoOLD4wEE8fOQPY8nmmRac
+      # Las siguientes variables se deben configurar manualmente en el dashboard de Render
+      # NEQUI_CLIENT_ID: (obtener de Nequi Business)
+      # NEQUI_CLIENT_SECRET: (obtener de Nequi Business)
+      # NEQUI_API_KEY: (obtener de Nequi Business)
+      # NEQUI_BUSINESS_PHONE: 3208504177
+      # NEQUI_WEBHOOK_SECRET: (crear un secret único)
+      # NEQUI_ENV: production
+    disk:
+      name: rocola-data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
