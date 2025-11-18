@@ -1,0 +1,11 @@
+[
+  {
+    "clientId": "ciudad-gotica",
+    "clientName": "Ciudad Gótica Licores",
+    "domain": "rockola-ciudad-gotica-licores.netlify.app",
+    "altDomains": ["localhost"],
+    "active": true,
+    "createdAt": "2025-11-18",
+    "plan": "premium"
+  }
+]

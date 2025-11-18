@@ -9,6 +9,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { generateNequiPayment, checkPaymentStatus } from './nequi-payment.js';
+import { WompiPayment } from './wompi-payment.js';
+import { ConfigLoader } from './config-loader.js';
 
 dotenv.config();
 
@@ -430,6 +432,183 @@ app.post('/api/payment/webhook', async (req, res) => {
   } catch (error) {
     console.error('Error procesando webhook Nequi:', error);
     res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ============= WOMPI PAYMENT ENDPOINTS =============
+
+// Crear pago prioritario con Wompi
+app.post('/api/payment/wompi/create', async (req, res) => {
+  try {
+    const { songId, songTitle, customerName, amount } = req.body;
+    
+    // Validar datos
+    if (!songId || !songTitle || !customerName) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Faltan datos requeridos' 
+      });
+    }
+
+    // Crear instancia de Wompi con configuración de Ciudad Gótica
+    const configLoader = ConfigLoader.getInstance();
+    const clientConfig = configLoader.getClientById('ciudad-gotica');
+    
+    if (!clientConfig || !clientConfig.payments.enabled) {
+      return res.status(400).json({
+        success: false,
+        error: 'Pagos no disponibles'
+      });
+    }
+
+    const wompi = new WompiPayment(clientConfig);
+    
+    // Generar referencia única
+    const reference = `priority-${songId}-${Date.now()}`;
+    
+    // Crear pago en Wompi
+    const paymentResult = await wompi.createPriorityPayment({
+      amount: amount || 1000,
+      reference,
+      customerEmail: `${customerName.replace(/\s+/g, '')}@rockola.local`,
+      description: `Prioridad: ${songTitle}`,
+      redirectUrl: process.env.FRONTEND_URL || 'https://rockola-ciudad-gotica-licores.netlify.app'
+    });
+
+    if (paymentResult.success) {
+      // Guardar pago pendiente
+      pendingPayments[reference] = {
+        songId,
+        songTitle,
+        customerName,
+        amount: amount || 1000,
+        timestamp: Date.now(),
+        wompiTransactionId: paymentResult.transactionId
+      };
+
+      console.log(`💳 Pago Wompi creado: ${songTitle} - ref: ${reference}`);
+
+      res.json({
+        success: true,
+        paymentUrl: paymentResult.paymentUrl,
+        reference,
+        transactionId: paymentResult.transactionId
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: paymentResult.error || 'Error al crear pago'
+      });
+    }
+  } catch (error) {
+    console.error('Error creando pago Wompi:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno al procesar pago' 
+    });
+  }
+});
+
+// Webhook de Wompi (recibe notificaciones de pago)
+app.post('/api/payment/wompi/webhook', async (req, res) => {
+  try {
+    const { event, data } = req.body;
+    
+    console.log('📩 Webhook Wompi recibido:', event);
+
+    // Validar evento de transacción aprobada
+    if (event === 'transaction.updated' && data.status === 'APPROVED') {
+      const reference = data.reference;
+      const payment = pendingPayments[reference];
+
+      if (payment) {
+        // Buscar la canción en la cola
+        const songIndex = queue.findIndex(s => s.id === payment.songId);
+        
+        if (songIndex !== -1) {
+          // Remover canción de su posición actual
+          const [song] = queue.splice(songIndex, 1);
+          
+          // Marcar como pago prioritario
+          song.priority = true;
+          song.paidPriority = true;
+          song.paymentTimestamp = Date.now();
+          song.paymentReference = reference;
+          song.paymentMethod = 'wompi';
+          
+          // Insertar en la cola ordenada por prioridad
+          const firstNonPriorityIndex = queue.findIndex(s => !s.paidPriority);
+          
+          if (firstNonPriorityIndex === -1) {
+            queue.unshift(song);
+          } else {
+            let insertIndex = 0;
+            for (let i = 0; i < firstNonPriorityIndex; i++) {
+              if (queue[i].paymentTimestamp && song.paymentTimestamp > queue[i].paymentTimestamp) {
+                insertIndex = i + 1;
+              } else {
+                break;
+              }
+            }
+            queue.splice(insertIndex, 0, song);
+          }
+          
+          writeData(QUEUE_FILE, queue);
+          io.emit('queue-update', queue);
+          
+          // Eliminar pago pendiente
+          delete pendingPayments[reference];
+          
+          console.log(`✅ Webhook Wompi: Pago confirmado para ${song.title} (ref: ${reference})`);
+        }
+      }
+    }
+    
+    // Responder OK a Wompi
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Error procesando webhook Wompi:', error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Verificar estado de transacción Wompi
+app.get('/api/payment/wompi/status/:reference', async (req, res) => {
+  try {
+    const { reference } = req.params;
+    const payment = pendingPayments[reference];
+
+    if (!payment) {
+      return res.json({
+        success: false,
+        error: 'Pago no encontrado'
+      });
+    }
+
+    // Crear instancia de Wompi
+    const configLoader = ConfigLoader.getInstance();
+    const clientConfig = configLoader.getClientById('ciudad-gotica');
+    const wompi = new WompiPayment(clientConfig);
+
+    // Verificar transacción
+    const result = await wompi.verifyTransaction(payment.wompiTransactionId);
+
+    res.json({
+      success: true,
+      status: result.status,
+      payment: {
+        reference,
+        songTitle: payment.songTitle,
+        amount: payment.amount,
+        customerName: payment.customerName
+      }
+    });
+  } catch (error) {
+    console.error('Error verificando pago Wompi:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar pago'
+    });
   }
 });
 

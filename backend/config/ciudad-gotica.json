@@ -1,0 +1,74 @@
+{
+  "clientId": "ciudad-gotica",
+  "clientName": "Ciudad Gótica Licores",
+  "domain": "rockola-ciudad-gotica-licores.netlify.app",
+  "active": true,
+  
+  "branding": {
+    "logo": "/logogotica.png",
+    "backgroundImage": "/fondo-gotica.png",
+    "primaryColor": "#ff914d",
+    "secondaryColor": "#0a1628",
+    "accentColor": "#ff7a2f",
+    "darkColor": "#152238"
+  },
+  
+  "youtube": {
+    "apiKey": "AIzaSyDBzDvHctztTDoOLD4wEE8fOQPY8nmmRac",
+    "quotaLimit": 10000,
+    "maxResults": 50,
+    "cacheEnabled": true,
+    "cacheDuration": 1800000
+  },
+  
+  "payments": {
+    "enabled": true,
+    "provider": "wompi",
+    "wompi": {
+      "publicKey": "pub_test_G4gqhmXsPcFnml7p2kPJT8L7h23Z2J5c",
+      "privateKey": "prv_test_gT6PjQrOczP8RjvwCXfgDHYTzXaClpW9",
+      "integritySecret": "test_integrity_Kx7bF4sM2n9P5qL8vRwY3t",
+      "currency": "COP",
+      "priorityPrice": 1000,
+      "environment": "test"
+    }
+  },
+  
+  "features": {
+    "chat": true,
+    "menu": true,
+    "voting": true,
+    "payments": true,
+    "randomPlay": true,
+    "userNameRequired": true,
+    "videoScreen": true
+  },
+  
+  "limits": {
+    "maxQueueSize": 100,
+    "maxChatMessages": 500,
+    "maxMenuItems": 50,
+    "searchResultsPerQuery": 50
+  },
+  
+  "contact": {
+    "phone": "3208504177",
+    "email": "contacto@ciudadgotica.com",
+    "address": "Calle Principal #123, Ciudad",
+    "whatsapp": "573208504177"
+  },
+  
+  "admin": {
+    "password": "Gotica123",
+    "email": "admin@ciudadgotica.com"
+  },
+  
+  "metadata": {
+    "createdAt": "2025-11-18",
+    "plan": "premium",
+    "monthlyFee": 100000,
+    "setupFee": 800000,
+    "expiresAt": null,
+    "notes": "Cliente inicial - Ciudad Gótica Licores Bar"
+  }
+}

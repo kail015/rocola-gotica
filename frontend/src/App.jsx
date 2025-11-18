@@ -17,6 +17,8 @@ function App() {
   const [menu, setMenu] = useState([]);
   const [usersCount, setUsersCount] = useState(0);
   const [activeTab, setActiveTab] = useState('queue'); // queue, search, chat, menu
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [tempUsername, setTempUsername] = useState('');
   const [userId] = useState(() => {
     let id = localStorage.getItem('userId');
     if (!id) {
@@ -29,11 +31,14 @@ function App() {
   const playerRef = useRef(null);
   const chatEndRef = useRef(null);
 
-  // Cargar nombre de usuario del localStorage
+  // Verificar si el usuario tiene nombre guardado, si no, mostrar modal
   useEffect(() => {
     const savedUsername = localStorage.getItem('username');
-    if (savedUsername) {
+    if (savedUsername && savedUsername.trim()) {
       setUsername(savedUsername);
+      setShowNameModal(false);
+    } else {
+      setShowNameModal(true);
     }
   }, []);
 
@@ -152,7 +157,11 @@ function App() {
 
   const handleAddSong = (song) => {
     if (socketRef.current) {
-      socketRef.current.emit('add-song', song);
+      // Incluir el nombre del usuario que agrega la canción
+      socketRef.current.emit('add-song', {
+        ...song,
+        addedBy: username
+      });
     }
     setSearchResults([]);
     setSearchQuery('');
@@ -170,139 +179,27 @@ function App() {
     if (!song) return;
 
     try {
-      // Iniciar pago
-      const response = await axios.post(`${BACKEND_URL}/api/payment/priority`, { songId });
-      
+      // Solicitar link de pago a Wompi
+      const response = await axios.post(`${BACKEND_URL}/api/payment/wompi/create`, {
+        songId: songId,
+        songTitle: song.title,
+        customerName: username,
+        amount: 1000 // $1,000 COP
+      });
+
       if (response.data.success) {
-        const { reference, amount } = response.data;
-        const nequiPhone = '3208504177'; // Número de Nequi de Ciudad Gótica Licores
+        const { paymentUrl, reference } = response.data;
         
-        // Copiar referencia al clipboard
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(reference).catch(() => {});
-        }
-
-        console.log(`💳 Pago generado: ${reference} - Abriendo Nequi...`);
-
-        // Crear deep link de Nequi para abrir la app directamente
-        // Formato: nequi://payment?phoneNumber=XXX&amount=XXX&message=XXX
-        const nequiDeepLink = `nequi://payment?phoneNumber=${nequiPhone}&amount=${amount}&message=${encodeURIComponent(reference)}`;
+        // Abrir Wompi en nueva ventana
+        window.open(paymentUrl, '_blank');
         
-        // Crear URL alternativa para web (si no tiene la app instalada)
-        const nequiWebUrl = `https://m.nequi.com.co/send?phone=${nequiPhone}&amount=${amount}&message=${encodeURIComponent(reference)}`;
-        
-        // Intentar abrir la app de Nequi
-        const openedApp = window.open(nequiDeepLink, '_blank');
-        
-        // Si no se pudo abrir la app (no está instalada), intentar la web
-        setTimeout(() => {
-          if (!openedApp || openedApp.closed) {
-            // Mostrar modal con opciones
-            const userChoice = window.confirm(
-              `⚡ PAGO DE PRIORIDAD\n\n` +
-              `🎵 Canción: ${song.title}\n` +
-              `� Monto: $${amount.toLocaleString()}\n` +
-              `🔢 Referencia: ${reference}\n\n` +
-              `📱 Haz clic en OK para abrir Nequi\n` +
-              `(La referencia ya está copiada)\n\n` +
-              `Tu canción subirá automáticamente al confirmar el pago`
-            );
-            
-            if (userChoice) {
-              // Intentar abrir de nuevo o mostrar instrucciones
-              window.location.href = nequiDeepLink;
-            }
-          }
-        }, 500);
-
-        // Mostrar notificación de espera
-        setTimeout(() => {
-          const notification = document.createElement('div');
-          notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #000;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.6);
-            z-index: 10000;
-            font-weight: 600;
-            animation: slideIn 0.3s ease-out;
-          `;
-          notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              ⏳ Esperando confirmación de pago...
-            </div>
-            <div style="font-size: 0.8rem; margin-top: 0.3rem; opacity: 0.8;">
-              Referencia: ${reference}
-            </div>
-          `;
-          document.body.appendChild(notification);
-
-          // Remover notificación después de 10 segundos
-          setTimeout(() => {
-            notification.remove();
-          }, 10000);
-        }, 2000);
-
-        // Iniciar verificación periódica del pago
-        let checksCount = 0;
-        const maxChecks = 120; // 10 minutos (120 * 5 segundos)
-        
-        const checkInterval = setInterval(async () => {
-          checksCount++;
-          
-          try {
-            const statusResponse = await axios.get(`${BACKEND_URL}/api/payment/status/${reference}`);
-            
-            if (statusResponse.data.paid) {
-              clearInterval(checkInterval);
-              
-              // Mostrar notificación de éxito
-              const successNotification = document.createElement('div');
-              successNotification.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: white;
-                padding: 2rem 3rem;
-                border-radius: 20px;
-                box-shadow: 0 12px 40px rgba(16, 185, 129, 0.6);
-                z-index: 10001;
-                font-size: 1.5rem;
-                font-weight: bold;
-                text-align: center;
-                animation: popIn 0.5s ease-out;
-              `;
-              successNotification.innerHTML = `
-                ✅ ¡PAGO CONFIRMADO!<br>
-                <span style="font-size: 1rem; font-weight: normal; opacity: 0.9; margin-top: 0.5rem; display: block;">
-                  🎵 Tu canción ahora es PRIORITARIA
-                </span>
-              `;
-              document.body.appendChild(successNotification);
-
-              setTimeout(() => {
-                successNotification.remove();
-              }, 5000);
-            }
-          } catch (error) {
-            console.error('Error verificando pago:', error);
-          }
-
-          // Detener después del tiempo máximo
-          if (checksCount >= maxChecks) {
-            clearInterval(checkInterval);
-            console.log('Verificación de pago finalizada por timeout');
-          }
-        }, 5000); // Verificar cada 5 segundos
+        // Mostrar notificación
+        alert(`💳 Pago generado\n\n🎵 Canción: ${song.title}\n💰 Monto: $1,000\n🔢 Referencia: ${reference}\n\n✅ Se abrió la ventana de Wompi para completar el pago.\n\nTu canción subirá automáticamente al confirmar.`);
+      } else {
+        alert('❌ Error generando el pago. Intenta de nuevo.');
       }
     } catch (error) {
-      console.error('Error al procesar pago:', error);
+      console.error('Error al crear pago:', error);
       alert('❌ Error al procesar el pago. Por favor intenta de nuevo.');
     }
   };
@@ -326,10 +223,61 @@ function App() {
     localStorage.setItem('username', newUsername);
   };
 
+  const handleSaveUsername = () => {
+    const trimmedName = tempUsername.trim();
+    if (trimmedName.length >= 2) {
+      setUsername(trimmedName);
+      localStorage.setItem('username', trimmedName);
+      setShowNameModal(false);
+      setTempUsername('');
+    } else {
+      alert('⚠️ El nombre debe tener al menos 2 caracteres');
+    }
+  };
+
   const hasSongLiked = (song) => {
     return song.likedBy && song.likedBy.includes(userId);
   };
 
+  // Si no hay nombre, solo mostrar el modal
+  if (showNameModal) {
+    return (
+      <div className="app">
+        <div className="name-modal-overlay">
+          <div className="name-modal">
+            <div className="name-modal-header">
+              <img src="/logogotica.png" alt="Ciudad Gótica" className="modal-logo" />
+              <h2>¡Bienvenido a la Rockola!</h2>
+              <p>Para continuar, ingresa tu nombre</p>
+            </div>
+            <div className="name-modal-body">
+              <input
+                type="text"
+                placeholder="Tu nombre (mínimo 2 caracteres)..."
+                value={tempUsername}
+                onChange={(e) => setTempUsername(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSaveUsername()}
+                maxLength={20}
+                autoFocus
+              />
+              <button 
+                className="name-modal-btn"
+                onClick={handleSaveUsername}
+                disabled={tempUsername.trim().length < 2}
+              >
+                Continuar 🎵
+              </button>
+            </div>
+            <p className="name-modal-note">
+              💡 Tu nombre quedará vinculado al chat
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Solo mostrar la app cuando el nombre esté ingresado
   return (
     <div className="app">
       <header className="header">
@@ -343,9 +291,8 @@ function App() {
         <p className="header-subtitle">
           ⚠️ Las canciones con contenido explícito o que no vayan con la temática del bar podrán ser eliminadas
         </p>
-        <div className="nequi-info-banner">
-          💰 Haz que tu canción suene primero por <strong>$1,000</strong> • 
-          Envía a Nequi: <strong>3208504177</strong> ⚡
+        <div className="wompi-banner">
+          💰 Haz que tu canción suene primero por $1,000 • Paga con Wompi ⚡
         </div>
       </header>
 
@@ -444,21 +391,21 @@ function App() {
                         <p>{song.channelTitle}</p>
                       </div>
                       <div className="song-actions">
-                        {index > 0 && !song.paidPriority && (
-                          <button 
-                            className="priority-btn"
-                            onClick={() => handlePriorityPayment(song.id)}
-                            title="Pagar $1,000 para que suene primero"
-                          >
-                            ⚡ $1,000
-                          </button>
-                        )}
                         <button 
                           className={`like-btn ${hasSongLiked(song) ? 'liked' : ''}`}
                           onClick={() => handleLikeSong(song.id)}
                         >
                           ❤️ {song.likes}
                         </button>
+                        {index > 0 && !song.paidPriority && (
+                          <button 
+                            className="priority-btn"
+                            onClick={() => handlePriorityPayment(song.id)}
+                            title="Haz que tu canción suene antes"
+                          >
+                            ⚡ Pagar $1,000
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -506,14 +453,9 @@ function App() {
           {/* Chat */}
           {activeTab === 'chat' && (
             <div className="chat-container">
-              <div className="username-input">
-                <input
-                  type="text"
-                  placeholder="Tu nombre..."
-                  value={username}
-                  onChange={(e) => handleUsernameChange(e.target.value)}
-                  maxLength={20}
-                />
+              <div className="username-display">
+                <span className="username-label">👤 Chateando como:</span>
+                <span className="username-value">{username}</span>
               </div>
               <div className="chat-messages">
                 {chatMessages.map((msg) => (

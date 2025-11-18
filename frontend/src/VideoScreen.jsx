@@ -279,6 +279,9 @@ function VideoScreen() {
                           {song.title}
                         </h4>
                         <p>{song.channelTitle}</p>
+                        {song.addedBy && (
+                          <p className="added-by">👤 {song.addedBy}</p>
+                        )}
                       </div>
                       <span className="queue-likes">❤️ {song.likes || 0}</span>
                     </div>

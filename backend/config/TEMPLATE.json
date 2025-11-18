@@ -1,0 +1,74 @@
+{
+  "clientId": "ejemplo-bar",
+  "clientName": "Nombre del Bar",
+  "domain": "ejemplo-bar.rockola.com",
+  "active": true,
+  
+  "branding": {
+    "logo": "/logos/ejemplo-bar.png",
+    "backgroundImage": "/backgrounds/ejemplo-bar.png",
+    "primaryColor": "#ff914d",
+    "secondaryColor": "#0a1628",
+    "accentColor": "#ff7a2f",
+    "darkColor": "#152238"
+  },
+  
+  "youtube": {
+    "apiKey": "TU_API_KEY_DE_YOUTUBE_AQUI",
+    "quotaLimit": 10000,
+    "maxResults": 50,
+    "cacheEnabled": true,
+    "cacheDuration": 1800000
+  },
+  
+  "payments": {
+    "enabled": true,
+    "provider": "wompi",
+    "wompi": {
+      "publicKey": "pub_prod_XXXXXXXXXXXX",
+      "privateKey": "prv_prod_XXXXXXXXXXXX",
+      "integritySecret": "prod_integrity_XXXXXXXXXXXX",
+      "currency": "COP",
+      "priorityPrice": 1000,
+      "environment": "production"
+    }
+  },
+  
+  "features": {
+    "chat": true,
+    "menu": true,
+    "voting": true,
+    "payments": true,
+    "randomPlay": true,
+    "userNameRequired": true,
+    "videoScreen": true
+  },
+  
+  "limits": {
+    "maxQueueSize": 100,
+    "maxChatMessages": 500,
+    "maxMenuItems": 50,
+    "searchResultsPerQuery": 50
+  },
+  
+  "contact": {
+    "phone": "300XXXXXXX",
+    "email": "contacto@ejemplo.com",
+    "address": "Dirección del bar",
+    "whatsapp": "573XXXXXXXXX"
+  },
+  
+  "admin": {
+    "password": "CAMBIAR_PASSWORD_SEGURO",
+    "email": "admin@ejemplo.com"
+  },
+  
+  "metadata": {
+    "createdAt": "2025-XX-XX",
+    "plan": "premium",
+    "monthlyFee": 100000,
+    "setupFee": 800000,
+    "expiresAt": null,
+    "notes": "Notas sobre el cliente"
+  }
+}
