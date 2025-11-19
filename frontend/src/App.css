@@ -1,3 +1,46 @@
+/* Video de introducción */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.skip-intro-btn {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(255, 145, 77, 0.9);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 145, 77, 0.5);
+  z-index: 10000;
+}
+
+.skip-intro-btn:hover {
+  background: rgba(255, 145, 77, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 145, 77, 0.7);
+}
+
 .app {
   min-height: 100vh;
   background: linear-gradient(135deg, rgba(10, 22, 40, 0.95) 0%, rgba(21, 34, 56, 0.95) 50%, rgba(10, 22, 40, 0.95) 100%),

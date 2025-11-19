@@ -19,6 +19,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('queue'); // queue, search, chat, menu
   const [showNameModal, setShowNameModal] = useState(false);
   const [tempUsername, setTempUsername] = useState('');
+  const [showIntro, setShowIntro] = useState(true);
   const [userId] = useState(() => {
     let id = localStorage.getItem('userId');
     if (!id) {
@@ -243,6 +244,34 @@ function App() {
   const hasSongLiked = (song) => {
     return song.likedBy && song.likedBy.includes(userId);
   };
+
+  const handleIntroEnd = () => {
+    setShowIntro(false);
+  };
+
+  const handleSkipIntro = () => {
+    setShowIntro(false);
+  };
+
+  // Mostrar video de intro primero
+  if (showIntro) {
+    return (
+      <div className="intro-overlay">
+        <video
+          className="intro-video"
+          autoPlay
+          muted
+          playsInline
+          onEnded={handleIntroEnd}
+        >
+          <source src="/intro.mp4" type="video/mp4" />
+        </video>
+        <button className="skip-intro-btn" onClick={handleSkipIntro}>
+          Saltar intro →
+        </button>
+      </div>
+    );
+  }
 
   // Si no hay nombre, solo mostrar el modal
   if (showNameModal) {
