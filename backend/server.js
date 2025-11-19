@@ -40,8 +40,8 @@ if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
 }
 
-// Crear carpeta para anuncios
-const adsDir = join(__dirname, 'ads');
+// Crear carpeta para anuncios dentro de data
+const adsDir = join(dataDir, 'ads');
 if (!existsSync(adsDir)) {
   mkdirSync(adsDir, { recursive: true });
 }
