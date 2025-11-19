@@ -1205,6 +1205,26 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Evento cuando termina un anuncio
+  socket.on('advertisement-ended', () => {
+    console.log('📺 Anuncio finalizado - eliminando archivo');
+    
+    if (currentAdvertisement && currentAdvertisement.playCount >= 1) {
+      const filePath = join(adsDir, currentAdvertisement.filename);
+      if (existsSync(filePath)) {
+        try {
+          unlinkSync(filePath);
+          console.log('🗑️ Anuncio eliminado automáticamente después de reproducirse');
+        } catch (err) {
+          console.error('Error eliminando anuncio:', err);
+        }
+      }
+      currentAdvertisement = null;
+      saveAdsData();
+      io.emit('advertisement-update', null);
+    }
+  });
+
   // Reproducir siguiente canción
   socket.on('play-next', () => {
     console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
@@ -1228,23 +1248,7 @@ io.on('connection', (socket) => {
       
       saveAdsData(); // Guardar cambios del playCount
       
-      // Eliminar anuncio después de reproducirse una vez
-      if (currentAdvertisement.playCount >= 1) {
-        setTimeout(() => {
-          const filePath = join(adsDir, currentAdvertisement.filename);
-          if (existsSync(filePath)) {
-            try {
-              unlinkSync(filePath);
-              console.log('🗑️ Anuncio eliminado automáticamente después de reproducirse');
-            } catch (err) {
-              console.error('Error eliminando anuncio:', err);
-            }
-          }
-          currentAdvertisement = null;
-          saveAdsData(); // Guardar cambios
-          io.emit('advertisement-update', null);
-        }, 5000); // 5 segundos después de iniciar reproducción
-      }
+      // NO eliminar aquí - esperar a que el frontend confirme que terminó
       
       return; // No reproducir canción ahora, el frontend llamará play-next cuando termine el anuncio
     }

@@ -256,9 +256,12 @@ function VideoScreen() {
               onCanPlay={() => console.log('📺 Anuncio listo para reproducir')}
               onPlay={() => console.log('📺 Anuncio reproduciéndose')}
               onEnded={() => {
-                console.log('📺 Anuncio finalizado, reproduciendo siguiente canción');
+                console.log('📺 Anuncio finalizado, notificando al servidor');
+                // Notificar al backend que el anuncio terminó para que lo elimine
+                socketRef.current?.emit('advertisement-ended');
                 setCurrentSong(null); // Limpiar primero
                 setTimeout(() => {
+                  console.log('📺 Reproduciendo siguiente canción');
                   socketRef.current?.emit('play-next');
                 }, 500);
               }}
