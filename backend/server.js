@@ -656,10 +656,12 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024 // 50MB máximo
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('video/')) {
+    // Solo aceptar formatos de video compatibles con navegadores
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Solo se permiten archivos de video'));
+      cb(new Error(`Formato no soportado. Use: MP4 (H.264), WebM o OGG. Recibido: ${file.mimetype}`));
     }
   }
 });

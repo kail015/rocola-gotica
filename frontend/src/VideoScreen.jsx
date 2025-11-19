@@ -297,6 +297,14 @@ function VideoScreen() {
                 console.error('❌ URL que falló:', currentSong.videoUrl);
                 console.error('❌ Network state:', e.target.networkState);
                 console.error('❌ Ready state:', e.target.readyState);
+                
+                // Mostrar alerta al admin
+                if (e.target.error?.code === 4) {
+                  console.error('❌ FORMATO DE VIDEO INCOMPATIBLE');
+                  console.error('❌ El navegador no puede reproducir este codec');
+                  console.error('❌ Recodifique el video a MP4 (H.264) compatible con navegadores');
+                }
+                
                 // Si el anuncio falla, pasar a la siguiente canción
                 setTimeout(() => {
                   socketRef.current?.emit('play-next');
