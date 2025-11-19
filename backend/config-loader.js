@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Sistema de carga de configuración multi-tenant
@@ -7,7 +11,7 @@ const path = require('path');
  */
 class ConfigLoader {
   constructor() {
-    this.configsPath = path.join(__dirname, 'config');
+    this.configsPath = join(__dirname, 'config');
     this.clientsCache = new Map();
     this.loadAllClients();
   }
@@ -17,8 +21,8 @@ class ConfigLoader {
    */
   loadAllClients() {
     try {
-      const clientsFile = path.join(this.configsPath, 'clients.json');
-      const clientsList = JSON.parse(fs.readFileSync(clientsFile, 'utf8'));
+      const clientsFile = join(this.configsPath, 'clients.json');
+      const clientsList = JSON.parse(readFileSync(clientsFile, 'utf8'));
       
       clientsList.forEach(client => {
         if (client.active) {
@@ -48,13 +52,13 @@ class ConfigLoader {
    * Carga la configuración de un cliente específico
    */
   loadClientConfig(clientId) {
-    const configFile = path.join(this.configsPath, `${clientId}.json`);
+    const configFile = join(this.configsPath, `${clientId}.json`);
     
-    if (!fs.existsSync(configFile)) {
+    if (!existsSync(configFile)) {
       throw new Error(`Configuración no encontrada para cliente: ${clientId}`);
     }
 
-    return JSON.parse(fs.readFileSync(configFile, 'utf8'));
+    return JSON.parse(readFileSync(configFile, 'utf8'));
   }
 
   /**
@@ -97,8 +101,8 @@ class ConfigLoader {
    * Lista todos los clientes activos
    */
   getAllClients() {
-    const clientsFile = path.join(this.configsPath, 'clients.json');
-    const clientsList = JSON.parse(fs.readFileSync(clientsFile, 'utf8'));
+    const clientsFile = join(this.configsPath, 'clients.json');
+    const clientsList = JSON.parse(readFileSync(clientsFile, 'utf8'));
     return clientsList.filter(c => c.active);
   }
 
@@ -154,15 +158,15 @@ class ConfigLoader {
    * Crea estructura de datos para un nuevo cliente
    */
   initializeClientData(clientId) {
-    const dataDir = path.join(__dirname, 'data', clientId);
+    const dataDir = join(__dirname, 'data', clientId);
     
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    if (!existsSync(dataDir)) {
+      mkdirSync(dataDir, { recursive: true });
       
       // Crear archivos iniciales
-      fs.writeFileSync(path.join(dataDir, 'queue.json'), '[]');
-      fs.writeFileSync(path.join(dataDir, 'chat.json'), '[]');
-      fs.writeFileSync(path.join(dataDir, 'menu.json'), '[]');
+      writeFileSync(join(dataDir, 'queue.json'), '[]');
+      writeFileSync(join(dataDir, 'chat.json'), '[]');
+      writeFileSync(join(dataDir, 'menu.json'), '[]');
       
       console.log(`✅ Estructura de datos creada para: ${clientId}`);
       return true;
@@ -170,7 +174,17 @@ class ConfigLoader {
     
     return false;
   }
+
+  /**
+   * Singleton instance
+   */
+  static getInstance() {
+    if (!ConfigLoader.instance) {
+      ConfigLoader.instance = new ConfigLoader();
+    }
+    return ConfigLoader.instance;
+  }
 }
 
-// Exportar instancia única (singleton)
-module.exports = new ConfigLoader();
+// Exportar clase
+export { ConfigLoader };

@@ -1,5 +1,5 @@
-const axios = require('axios');
-const crypto = require('crypto');
+import axios from 'axios';
+import crypto from 'crypto';
 
 /**
  * Integración con Wompi para pagos en línea
@@ -244,4 +244,4 @@ class WompiPayment {
   }
 }
 
-module.exports = WompiPayment;
+export { WompiPayment };
