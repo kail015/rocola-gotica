@@ -74,6 +74,16 @@ function VideoScreen() {
       }
     });
 
+    socket.on('show-advertisement', (adData) => {
+      console.log('📺 Mostrando anuncio publicitario');
+      setCurrentSong({
+        isAdvertisement: true,
+        videoUrl: adData.url,
+        title: 'Anuncio Publicitario',
+        uploadedBy: adData.uploadedBy
+      });
+    });
+
     socket.on('connect', () => {
       console.log('✅ Socket conectado al servidor');
     });
@@ -85,6 +95,7 @@ function VideoScreen() {
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
+      socket.off('show-advertisement');
       socket.off('connect');
       socket.off('disconnect');
       socket.disconnect();
@@ -230,15 +241,31 @@ function VideoScreen() {
     <div className="video-screen">
       {currentSong ? (
         <div className="fullscreen-video">
-          <YouTube
-            key={currentSong.videoId}
-            videoId={currentSong.videoId}
-            opts={opts}
-            onEnd={handleSongEnd}
-            onError={handleError}
-            onReady={handleReady}
-            className="youtube-fullscreen"
-          />
+          {currentSong.isAdvertisement ? (
+            // Mostrar video de publicidad
+            <video
+              key={currentSong.videoUrl}
+              src={currentSong.videoUrl}
+              autoPlay
+              onEnded={() => {
+                console.log('📺 Anuncio finalizado, reproduciendo siguiente canción');
+                socketRef.current?.emit('play-next');
+              }}
+              className="advertisement-video"
+              controls={false}
+            />
+          ) : (
+            // Mostrar video de YouTube normal
+            <YouTube
+              key={currentSong.videoId}
+              videoId={currentSong.videoId}
+              opts={opts}
+              onEnd={handleSongEnd}
+              onError={handleError}
+              onReady={handleReady}
+              className="youtube-fullscreen"
+            />
+          )}
           <div className="video-info-overlay">
             <div className="video-header-logo">
               <img src="/logogotica.png" alt="Ciudad Gótica" className="video-logo" />

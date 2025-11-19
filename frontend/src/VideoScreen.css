@@ -29,6 +29,14 @@
   height: 100%;
 }
 
+/* Video de publicidad */
+.advertisement-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
 .video-info-overlay {
   position: absolute;
   bottom: 0;
