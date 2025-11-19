@@ -284,7 +284,10 @@ function Display() {
             try {
               const response = await axios.get(`${BACKEND_URL}/api/advertisement/current`);
               if (response.data.advertisement) {
-                if (window.confirm('¿Deseas eliminar el video publicitario actual?')) {
+                const ad = response.data.advertisement;
+                const adInfo = `📺 Video publicitario actual:\n\n👤 Subido por: ${ad.uploadedBy}\n📅 Fecha: ${new Date(ad.uploadedAt).toLocaleString('es-CO')}\n📦 Tamaño: ${(ad.size / 1024 / 1024).toFixed(2)} MB\n🎵 Se reproduce cada 4 canciones\n\n¿Deseas eliminar este anuncio?`;
+                
+                if (window.confirm(adInfo)) {
                   await axios.delete(`${BACKEND_URL}/api/advertisement`);
                   alert('✅ Anuncio eliminado exitosamente');
                 }
