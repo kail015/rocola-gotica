@@ -51,6 +51,7 @@ app.use('/ads', express.static(adsDir));
 const QUEUE_FILE = join(dataDir, 'queue.json');
 const CHAT_FILE = join(dataDir, 'chat.json');
 const MENU_FILE = join(dataDir, 'menu.json');
+const ADS_FILE = join(dataDir, 'ads.json');
 
 // Funciones para leer/escribir datos
 const readData = (file, defaultValue = []) => {
@@ -91,8 +92,23 @@ let menu = readData(MENU_FILE, []);
 let currentSong = null;
 let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
-let currentAdvertisement = null; // { filename, uploadedAt, uploadedBy }
-let songsPlayedSinceAd = 0; // Contador de canciones desde último anuncio
+
+// Cargar datos de anuncios
+const adsData = readData(ADS_FILE, { current: null, pending: [], songsPlayed: 0 });
+let currentAdvertisement = adsData.current; // { filename, uploadedAt, uploadedBy, approved, playCount }
+let pendingAdvertisements = adsData.pending; // Anuncios esperando aprobación
+let songsPlayedSinceAd = adsData.songsPlayed || 0; // Contador de canciones desde último anuncio
+
+console.log(`📺 Anuncios cargados: ${pendingAdvertisements.length} pendientes, ${currentAdvertisement ? '1 activo' : '0 activos'}`);
+
+// Función para guardar datos de anuncios
+const saveAdsData = () => {
+  writeData(ADS_FILE, {
+    current: currentAdvertisement,
+    pending: pendingAdvertisements,
+    songsPlayed: songsPlayedSinceAd
+  });
+};
 
 // Caché de búsquedas de YouTube (reduce consumo de API)
 const searchCache = new Map();
@@ -652,36 +668,29 @@ app.post('/api/advertisement/upload', upload.single('video'), async (req, res) =
 
     const { username } = req.body;
 
-    // Eliminar anuncio anterior si existe
-    if (currentAdvertisement && currentAdvertisement.filename) {
-      const oldFilePath = join(adsDir, currentAdvertisement.filename);
-      if (existsSync(oldFilePath)) {
-        try {
-          unlinkSync(oldFilePath);
-        } catch (err) {
-          console.error('Error eliminando anuncio anterior:', err);
-        }
-      }
-    }
-
-    currentAdvertisement = {
+    // Crear anuncio pendiente de aprobación
+    const pendingAd = {
+      id: Date.now().toString(),
       filename: req.file.filename,
       uploadedAt: new Date().toISOString(),
       uploadedBy: username || 'Anónimo',
-      size: req.file.size
+      size: req.file.size,
+      approved: false
     };
 
-    songsPlayedSinceAd = 0;
+    pendingAdvertisements.push(pendingAd);
+    saveAdsData(); // Guardar en disco
 
-    io.emit('advertisement-update', currentAdvertisement);
+    // Notificar al admin que hay un nuevo anuncio pendiente
+    io.emit('pending-advertisement', pendingAd);
 
     res.json({
       success: true,
-      message: 'Anuncio subido exitosamente',
-      advertisement: currentAdvertisement
+      message: 'Anuncio subido exitosamente. Esperando aprobación del administrador.',
+      advertisement: pendingAd
     });
 
-    console.log(`📺 Nuevo anuncio subido por ${username || 'Anónimo'}: ${req.file.filename}`);
+    console.log(`📺 Nuevo anuncio pendiente de aprobación por ${username || 'Anónimo'}: ${req.file.filename}`);
   } catch (error) {
     console.error('Error subiendo anuncio:', error);
     res.status(500).json({ error: 'Error al subir el anuncio' });
@@ -696,7 +705,116 @@ app.get('/api/advertisement/current', (req, res) => {
   });
 });
 
-// Eliminar anuncio (admin)
+// Obtener anuncios pendientes (admin)
+app.get('/api/advertisement/pending', (req, res) => {
+  console.log('📋 Solicitando anuncios pendientes:', {
+    pendingCount: pendingAdvertisements.length,
+    hasCurrent: !!currentAdvertisement
+  });
+  res.json({
+    pending: pendingAdvertisements,
+    current: currentAdvertisement
+  });
+});
+
+// Aprobar anuncio (admin)
+app.post('/api/advertisement/approve/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adIndex = pendingAdvertisements.findIndex(ad => ad.id === id);
+    
+    if (adIndex === -1) {
+      return res.status(404).json({ error: 'Anuncio no encontrado' });
+    }
+
+    const approvedAd = pendingAdvertisements[adIndex];
+    
+    // Eliminar anuncio activo anterior si existe
+    if (currentAdvertisement && currentAdvertisement.filename) {
+      const oldFilePath = join(adsDir, currentAdvertisement.filename);
+      if (existsSync(oldFilePath)) {
+        try {
+          unlinkSync(oldFilePath);
+        } catch (err) {
+          console.error('Error eliminando anuncio anterior:', err);
+        }
+      }
+    }
+
+    // Activar el nuevo anuncio
+    currentAdvertisement = {
+      ...approvedAd,
+      approved: true,
+      approvedAt: new Date().toISOString(),
+      playCount: 0
+    };
+
+    // Remover de pendientes
+    pendingAdvertisements.splice(adIndex, 1);
+
+    songsPlayedSinceAd = 0;
+    saveAdsData(); // Guardar cambios
+
+    // Notificar a todos
+    io.emit('advertisement-approved', {
+      username: approvedAd.uploadedBy,
+      message: '✅ Tu anuncio ha sido aprobado y se reproducirá cada 4 canciones'
+    });
+
+    res.json({
+      success: true,
+      message: 'Anuncio aprobado exitosamente',
+      advertisement: currentAdvertisement
+    });
+
+    console.log(`✅ Anuncio aprobado: ${approvedAd.uploadedBy}`);
+  } catch (error) {
+    console.error('Error aprobando anuncio:', error);
+    res.status(500).json({ error: 'Error al aprobar el anuncio' });
+  }
+});
+
+// Rechazar anuncio (admin)
+app.delete('/api/advertisement/reject/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adIndex = pendingAdvertisements.findIndex(ad => ad.id === id);
+    
+    if (adIndex === -1) {
+      return res.status(404).json({ error: 'Anuncio no encontrado' });
+    }
+
+    const rejectedAd = pendingAdvertisements[adIndex];
+    
+    // Eliminar archivo
+    const filePath = join(adsDir, rejectedAd.filename);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
+    }
+
+    // Remover de pendientes
+    pendingAdvertisements.splice(adIndex, 1);
+    saveAdsData(); // Guardar cambios
+
+    // Notificar al usuario
+    io.emit('advertisement-rejected', {
+      username: rejectedAd.uploadedBy,
+      message: '❌ Tu anuncio no fue aprobado por el administrador'
+    });
+
+    res.json({
+      success: true,
+      message: 'Anuncio rechazado y eliminado'
+    });
+
+    console.log(`❌ Anuncio rechazado: ${rejectedAd.uploadedBy}`);
+  } catch (error) {
+    console.error('Error rechazando anuncio:', error);
+    res.status(500).json({ error: 'Error al rechazar el anuncio' });
+  }
+});
+
+// Eliminar anuncio activo (admin)
 app.delete('/api/advertisement', async (req, res) => {
   try {
     if (!currentAdvertisement) {
@@ -710,7 +828,8 @@ app.delete('/api/advertisement', async (req, res) => {
 
     currentAdvertisement = null;
     songsPlayedSinceAd = 0;
-
+    saveAdsData(); // Guardar cambios
+    
     io.emit('advertisement-update', null);
 
     res.json({ success: true, message: 'Anuncio eliminado exitosamente' });
@@ -1052,14 +1171,38 @@ io.on('connection', (socket) => {
   socket.on('play-next', () => {
     console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
     
-    // Verificar si debe mostrar anuncio cada 4 canciones
-    if (currentAdvertisement && songsPlayedSinceAd >= 4) {
+    // Verificar si debe mostrar anuncio cada 4 canciones y si está aprobado
+    if (currentAdvertisement && currentAdvertisement.approved && songsPlayedSinceAd >= 4) {
       songsPlayedSinceAd = 0;
+      currentAdvertisement.playCount = (currentAdvertisement.playCount || 0) + 1;
+      
       io.emit('show-advertisement', {
         url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`,
         ...currentAdvertisement
       });
-      console.log('📺 Mostrando anuncio después de 4 canciones');
+      
+      console.log(`📺 Mostrando anuncio después de 4 canciones (reproducción #${currentAdvertisement.playCount})`);
+      
+      saveAdsData(); // Guardar cambios del playCount
+      
+      // Eliminar anuncio después de reproducirse una vez
+      if (currentAdvertisement.playCount >= 1) {
+        setTimeout(() => {
+          const filePath = join(adsDir, currentAdvertisement.filename);
+          if (existsSync(filePath)) {
+            try {
+              unlinkSync(filePath);
+              console.log('🗑️ Anuncio eliminado automáticamente después de reproducirse');
+            } catch (err) {
+              console.error('Error eliminando anuncio:', err);
+            }
+          }
+          currentAdvertisement = null;
+          saveAdsData(); // Guardar cambios
+          io.emit('advertisement-update', null);
+        }, 5000); // 5 segundos después de iniciar reproducción
+      }
+      
       return;
     }
     

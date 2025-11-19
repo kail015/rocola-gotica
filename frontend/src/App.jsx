@@ -99,6 +99,18 @@ function App() {
       alert(`⚠️ ${message}`);
     });
 
+    socket.on('advertisement-approved', ({ username }) => {
+      if (username === userName) {
+        alert('✅ ¡Tu anuncio ha sido aprobado! Se reproducirá cada 4 canciones.');
+      }
+    });
+
+    socket.on('advertisement-rejected', ({ username }) => {
+      if (username === userName) {
+        alert('❌ Tu anuncio no fue aprobado. Por favor intenta con otro video.');
+      }
+    });
+
     // Cargar datos iniciales
     loadInitialData();
 
@@ -110,6 +122,8 @@ function App() {
       socket.off('users-count');
       socket.off('menu-update');
       socket.off('song-limit-reached');
+      socket.off('advertisement-approved');
+      socket.off('advertisement-rejected');
       socket.disconnect();
     };
   }, [userId]);

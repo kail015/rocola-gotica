@@ -716,6 +716,165 @@
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
 }
 
+/* Badge de anuncios pendientes */
+.ad-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+}
+
+/* Panel de gestión de publicidad */
+.ad-manager {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.ad-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(80vh - 100px);
+}
+
+.ad-section {
+  background: rgba(30, 58, 95, 0.3);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 145, 77, 0.2);
+}
+
+.ad-section h4 {
+  margin: 0 0 1rem 0;
+  color: #ff914d;
+  font-size: 1.1rem;
+}
+
+.no-ads {
+  color: #8b9cb5;
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.ad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ad-item {
+  background: rgba(15, 31, 58, 0.6);
+  border-radius: 8px;
+  padding: 1.2rem;
+  border: 1px solid rgba(255, 145, 77, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ad-item.active-ad {
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.ad-info {
+  flex: 1;
+}
+
+.ad-info h5 {
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.ad-info p {
+  margin: 0.3rem 0;
+  color: #8b9cb5;
+  font-size: 0.85rem;
+}
+
+.ad-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.approve-btn {
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.approve-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+}
+
+.reject-btn {
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.reject-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+}
+
+.delete-ad-btn {
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.delete-ad-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+}
+
 /* Panel de gestión del menú */
 .menu-manager-widget {
   position: fixed;

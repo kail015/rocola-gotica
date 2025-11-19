@@ -18,6 +18,9 @@ function Display() {
   const [showMenuManager, setShowMenuManager] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState({ name: '', price: '', category: 'Bebidas' });
+  const [showAdManager, setShowAdManager] = useState(false);
+  const [pendingAds, setPendingAds] = useState([]);
+  const [currentAd, setCurrentAd] = useState(null);
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -70,12 +73,33 @@ function Display() {
       .then(data => setMenu(data))
       .catch(err => console.error('Error loading menu:', err));
 
+    // Cargar anuncios pendientes
+    fetch(`${BACKEND_URL}/api/advertisement/pending`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('📺 Anuncios cargados:', data);
+        setPendingAds(data.pending || []);
+        setCurrentAd(data.current);
+      })
+      .catch(err => console.error('Error loading ads:', err));
+
+    socket.on('pending-advertisement', (ad) => {
+      console.log('📺 Nuevo anuncio recibido:', ad);
+      setPendingAds(prev => {
+        const updated = [...prev, ad];
+        console.log('📺 Lista actualizada:', updated);
+        return updated;
+      });
+      alert(`📺 Nuevo anuncio pendiente de aprobación de: ${ad.uploadedBy}`);
+    });
+
     return () => {
       socket.off('current-song');
       socket.off('queue-update');
       socket.off('chat-message');
       socket.off('admin-chat-message');
       socket.off('menu-update');
+      socket.off('pending-advertisement');
       socket.disconnect();
     };
   }, []);
@@ -280,27 +304,10 @@ function Display() {
         {/* Botón para gestionar publicidad */}
         <button 
           className="ad-toggle-btn"
-          onClick={async () => {
-            try {
-              const response = await axios.get(`${BACKEND_URL}/api/advertisement/current`);
-              if (response.data.advertisement) {
-                const ad = response.data.advertisement;
-                const adInfo = `📺 Video publicitario actual:\n\n👤 Subido por: ${ad.uploadedBy}\n📅 Fecha: ${new Date(ad.uploadedAt).toLocaleString('es-CO')}\n📦 Tamaño: ${(ad.size / 1024 / 1024).toFixed(2)} MB\n🎵 Se reproduce cada 4 canciones\n\n¿Deseas eliminar este anuncio?`;
-                
-                if (window.confirm(adInfo)) {
-                  await axios.delete(`${BACKEND_URL}/api/advertisement`);
-                  alert('✅ Anuncio eliminado exitosamente');
-                }
-              } else {
-                alert('ℹ️ No hay anuncios activos');
-              }
-            } catch (error) {
-              alert('❌ Error: ' + (error.response?.data?.error || error.message));
-            }
-          }}
+          onClick={() => setShowAdManager(!showAdManager)}
           title="Gestionar Publicidad"
         >
-          📺 Ads
+          📺 Ads {pendingAds.length > 0 && <span className="ad-badge">{pendingAds.length}</span>}
         </button>
 
         {/* Chat flotante para admin */}
@@ -458,6 +465,110 @@ function Display() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel de gestión de publicidad */}
+        {showAdManager && (
+          <div className="menu-manager ad-manager">
+            <div className="menu-panel">
+              <div className="menu-header">
+                <h3>📺 Gestión de Publicidad</h3>
+                <button onClick={() => setShowAdManager(false)} className="close-btn">✕</button>
+              </div>
+              
+              <div className="ad-sections">
+                {/* Anuncios pendientes */}
+                <div className="ad-section">
+                  <h4>⏳ Pendientes de aprobación ({pendingAds.length})</h4>
+                  {pendingAds.length === 0 ? (
+                    <p className="no-ads">No hay anuncios pendientes</p>
+                  ) : (
+                    <div className="ad-list">
+                      {pendingAds.map(ad => (
+                        <div key={ad.id} className="ad-item">
+                          <div className="ad-info">
+                            <h5>👤 {ad.uploadedBy}</h5>
+                            <p>📅 {new Date(ad.uploadedAt).toLocaleString('es-CO')}</p>
+                            <p>📦 {(ad.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                          <div className="ad-actions">
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await axios.post(`${BACKEND_URL}/api/advertisement/approve/${ad.id}`);
+                                  setPendingAds(prev => prev.filter(a => a.id !== ad.id));
+                                  alert('✅ Anuncio aprobado');
+                                  // Recargar datos
+                                  const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
+                                  setPendingAds(res.data.pending || []);
+                                  setCurrentAd(res.data.current);
+                                } catch (error) {
+                                  alert('❌ Error: ' + (error.response?.data?.error || error.message));
+                                }
+                              }}
+                              className="approve-btn"
+                            >
+                              ✅ Aprobar
+                            </button>
+                            <button 
+                              onClick={async () => {
+                                if (window.confirm(`¿Rechazar anuncio de ${ad.uploadedBy}?`)) {
+                                  try {
+                                    await axios.delete(`${BACKEND_URL}/api/advertisement/reject/${ad.id}`);
+                                    setPendingAds(prev => prev.filter(a => a.id !== ad.id));
+                                    alert('❌ Anuncio rechazado');
+                                  } catch (error) {
+                                    alert('❌ Error: ' + (error.response?.data?.error || error.message));
+                                  }
+                                }
+                              }}
+                              className="reject-btn"
+                            >
+                              ❌ Rechazar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Anuncio activo */}
+                <div className="ad-section">
+                  <h4>✅ Anuncio activo</h4>
+                  {currentAd ? (
+                    <div className="ad-item active-ad">
+                      <div className="ad-info">
+                        <h5>👤 {currentAd.uploadedBy}</h5>
+                        <p>📅 {new Date(currentAd.uploadedAt).toLocaleString('es-CO')}</p>
+                        <p>📦 {(currentAd.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <p>🎵 Se reproduce cada 4 canciones</p>
+                        <p>▶️ Reproducido: {currentAd.playCount || 0} vez(ces)</p>
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm('¿Eliminar anuncio activo?')) {
+                            try {
+                              await axios.delete(`${BACKEND_URL}/api/advertisement`);
+                              setCurrentAd(null);
+                              alert('✅ Anuncio eliminado');
+                            } catch (error) {
+                              alert('❌ Error: ' + (error.response?.data?.error || error.message));
+                            }
+                          }
+                        }}
+                        className="delete-ad-btn"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="no-ads">No hay anuncio activo</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
