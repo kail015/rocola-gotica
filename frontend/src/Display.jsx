@@ -491,75 +491,67 @@ function Display() {
                 </div>
               </div>
               
-              <div style={{padding: '2rem', overflowY: 'auto', flex: 1}}>
+              <div style={{padding: '2rem', overflowY: 'auto', flex: 1, background: '#0a1628', minHeight: '500px'}}>
                 {/* Anuncios pendientes */}
                 <div style={{background: '#1e3a5f', padding: '1.5rem', marginBottom: '2rem', borderRadius: '10px', border: '2px solid #ff914d'}}>
-                  <h4 style={{color: '#ff914d', margin: '0 0 1rem 0', fontSize: '1.3rem'}}>⏳ Pendientes de aprobación ({pendingAds.length})</h4>
-                  {!pendingAds || pendingAds.length === 0 ? (
-                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncios pendientes</p>
-                  ) : (
-                    <div className="ad-list">
-                      {pendingAds.map(ad => (
-                        <div key={ad.id} className="ad-item" style={{background: 'rgba(15, 31, 58, 0.9)', padding: '1.2rem', borderRadius: '8px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                          <div className="ad-info">
-                            <h5 style={{color: '#fff', margin: '0 0 0.5rem 0'}}>👤 {ad.uploadedBy}</h5>
-                            <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>📅 {new Date(ad.uploadedAt).toLocaleString('es-CO')}</p>
-                            <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>📦 {(ad.size / 1024 / 1024).toFixed(2)} MB</p>
-                          </div>
-                          <div className="ad-actions">
-                            <button 
-                              onClick={async () => {
+                  <h4 style={{color: '#ff914d', margin: '0 0 1rem 0', fontSize: '1.3rem'}}>⏳ Pendientes de aprobación ({pendingAds?.length || 0})</h4>
+                  
+                  {pendingAds && pendingAds.length > 0 ? (
+                    pendingAds.map((ad, index) => (
+                      <div key={ad.id || index} style={{background: '#0f1f3a', padding: '1rem', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #3b82f6'}}>
+                        <p style={{color: 'white', margin: '0.5rem 0', fontSize: '1rem'}}>👤 <strong>{ad.uploadedBy}</strong></p>
+                        <p style={{color: '#8b9cb5', margin: '0.5rem 0', fontSize: '0.9rem'}}>📅 {new Date(ad.uploadedAt).toLocaleString('es-CO')}</p>
+                        <p style={{color: '#8b9cb5', margin: '0.5rem 0', fontSize: '0.9rem'}}>📦 {(ad.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <div style={{marginTop: '1rem', display: 'flex', gap: '0.5rem'}}>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await axios.post(`${BACKEND_URL}/api/advertisement/approve/${ad.id}`);
+                                alert('✅ Anuncio aprobado');
+                                const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
+                                setPendingAds(res.data.pending || []);
+                                setCurrentAd(res.data.current);
+                              } catch (error) {
+                                alert('❌ Error: ' + (error.response?.data?.error || error.message));
+                              }
+                            }}
+                            style={{padding: '0.6rem 1.2rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
+                          >
+                            ✅ Aprobar
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm(`¿Rechazar anuncio de ${ad.uploadedBy}?`)) {
                                 try {
-                                  await axios.post(`${BACKEND_URL}/api/advertisement/approve/${ad.id}`);
-                                  setPendingAds(prev => prev.filter(a => a.id !== ad.id));
-                                  alert('✅ Anuncio aprobado');
-                                  // Recargar datos
+                                  await axios.delete(`${BACKEND_URL}/api/advertisement/reject/${ad.id}`);
+                                  alert('❌ Anuncio rechazado');
                                   const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
                                   setPendingAds(res.data.pending || []);
                                   setCurrentAd(res.data.current);
                                 } catch (error) {
                                   alert('❌ Error: ' + (error.response?.data?.error || error.message));
                                 }
-                              }}
-                              className="approve-btn"
-                            >
-                              ✅ Aprobar
-                            </button>
-                            <button 
-                              onClick={async () => {
-                                if (window.confirm(`¿Rechazar anuncio de ${ad.uploadedBy}?`)) {
-                                  try {
-                                    await axios.delete(`${BACKEND_URL}/api/advertisement/reject/${ad.id}`);
-                                    setPendingAds(prev => prev.filter(a => a.id !== ad.id));
-                                    alert('❌ Anuncio rechazado');
-                                  } catch (error) {
-                                    alert('❌ Error: ' + (error.response?.data?.error || error.message));
-                                  }
-                                }
-                              }}
-                              className="reject-btn"
-                            >
-                              ❌ Rechazar
-                            </button>
-                          </div>
+                              }
+                            }}
+                            style={{padding: '0.6rem 1.2rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
+                          >
+                            ❌ Rechazar
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncios pendientes</p>
                   )}
                 </div>
-
-                {/* Anuncio activo */}
+                
+                {/* Anuncio activo simplificado por ahora */}
                 <div style={{background: '#1e3a5f', padding: '1.5rem', borderRadius: '10px', border: '2px solid #10b981'}}>
                   <h4 style={{color: '#10b981', margin: '0 0 1rem 0', fontSize: '1.3rem'}}>✅ Anuncio activo</h4>
                   {currentAd ? (
-                    <div className="ad-item active-ad" style={{background: 'rgba(16, 185, 129, 0.2)', padding: '1.2rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '2px solid #10b981'}}>
-                      <div className="ad-info">
-                        <h5 style={{color: '#fff', margin: '0 0 0.5rem 0'}}>👤 {currentAd.uploadedBy}</h5>
-                        <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>📅 {new Date(currentAd.uploadedAt).toLocaleString('es-CO')}</p>
-                        <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>📦 {(currentAd.size / 1024 / 1024).toFixed(2)} MB</p>
-                        <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>🎵 Se reproduce cada 4 canciones</p>
-                        <p style={{color: '#8b9cb5', margin: '0.3rem 0', fontSize: '0.85rem'}}>▶️ Reproducido: {currentAd.playCount || 0} vez(ces)</p>
-                      </div>
+                    <div style={{background: '#0f1f3a', padding: '1rem', borderRadius: '8px'}}>
+                      <p style={{color: 'white', margin: '0.5rem 0'}}>👤 <strong>{currentAd.uploadedBy}</strong></p>
+                      <p style={{color: '#8b9cb5', margin: '0.5rem 0'}}>Reproducido: {currentAd.playCount || 0} vez(ces)</p>
                       <button 
                         onClick={async () => {
                           if (window.confirm('¿Eliminar anuncio activo?')) {
@@ -572,13 +564,13 @@ function Display() {
                             }
                           }
                         }}
-                        className="delete-ad-btn"
+                        style={{marginTop: '1rem', padding: '0.6rem 1.2rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
                       >
                         🗑️ Eliminar
                       </button>
                     </div>
                   ) : (
-                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem'}}>No hay anuncio activo</p>
+                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncio activo</p>
                   )}
                 </div>
               </div>
