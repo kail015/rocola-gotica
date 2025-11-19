@@ -252,11 +252,36 @@ function VideoScreen() {
               autoPlay
               muted={false}
               playsInline
-              onLoadStart={() => console.log('📺 Cargando anuncio...')}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                backgroundColor: '#000',
+                zIndex: 1000
+              }}
+              onLoadStart={() => {
+                console.log('📺 Cargando anuncio...');
+                console.log('📺 URL:', currentSong.videoUrl);
+              }}
+              onLoadedMetadata={(e) => {
+                console.log('📺 Metadata cargada');
+                console.log('📺 Duración:', e.target.duration, 'segundos');
+                console.log('📺 Video width:', e.target.videoWidth);
+                console.log('📺 Video height:', e.target.videoHeight);
+              }}
               onCanPlay={() => console.log('📺 Anuncio listo para reproducir')}
-              onPlay={() => console.log('📺 Anuncio reproduciéndose')}
+              onPlay={() => console.log('📺 ▶️ Anuncio reproduciéndose')}
+              onTimeUpdate={(e) => {
+                // Log cada 2 segundos
+                if (Math.floor(e.target.currentTime) % 2 === 0) {
+                  console.log(`📺 Reproduciendo: ${Math.floor(e.target.currentTime)}s / ${Math.floor(e.target.duration)}s`);
+                }
+              }}
               onEnded={() => {
-                console.log('📺 Anuncio finalizado, notificando al servidor');
+                console.log('📺 ✅ Anuncio finalizado, notificando al servidor');
                 // Notificar al backend que el anuncio terminó para que lo elimine
                 socketRef.current?.emit('advertisement-ended');
                 setCurrentSong(null); // Limpiar primero
@@ -267,14 +292,20 @@ function VideoScreen() {
               }}
               onError={(e) => {
                 console.error('❌ Error cargando anuncio:', e);
+                console.error('❌ Error code:', e.target.error?.code);
+                console.error('❌ Error message:', e.target.error?.message);
                 console.error('❌ URL que falló:', currentSong.videoUrl);
+                console.error('❌ Network state:', e.target.networkState);
+                console.error('❌ Ready state:', e.target.readyState);
                 // Si el anuncio falla, pasar a la siguiente canción
                 setTimeout(() => {
                   socketRef.current?.emit('play-next');
                 }, 1000);
               }}
-              className="advertisement-video"
-              controls={false}
+              onPause={() => console.log('📺 ⏸️ Video pausado')}
+              onWaiting={() => console.log('📺 ⏳ Esperando buffer...')}
+              onStalled={() => console.log('📺 ⚠️ Video detenido (stalled)')}
+              controls={true}
             />
           ) : (
             // Mostrar video de YouTube normal
