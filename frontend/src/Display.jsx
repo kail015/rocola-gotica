@@ -20,7 +20,7 @@ function Display() {
   const [newItem, setNewItem] = useState({ name: '', price: '', category: 'Bebidas' });
   const [showAdManager, setShowAdManager] = useState(false);
   const [pendingAds, setPendingAds] = useState([]);
-  const [currentAd, setCurrentAd] = useState(null);
+  const [approvedAds, setApprovedAds] = useState([]);
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -79,7 +79,7 @@ function Display() {
       .then(data => {
         console.log('📺 Anuncios cargados:', data);
         setPendingAds(data.pending || []);
-        setCurrentAd(data.current);
+        setApprovedAds(data.approved || []);
       })
       .catch(err => console.error('Error loading ads:', err));
 
@@ -481,7 +481,7 @@ function Display() {
                     onClick={async () => {
                       const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
                       setPendingAds(res.data.pending || []);
-                      setCurrentAd(res.data.current);
+                      setApprovedAds(res.data.approved || []);
                     }}
                     style={{background: '#3b82f6', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer'}}
                   >
@@ -507,10 +507,10 @@ function Display() {
                             onClick={async () => {
                               try {
                                 await axios.post(`${BACKEND_URL}/api/advertisement/approve/${ad.id}`);
-                                alert('✅ Anuncio aprobado');
+                                alert('✅ Anuncio aprobado y agregado a la cola');
                                 const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
                                 setPendingAds(res.data.pending || []);
-                                setCurrentAd(res.data.current);
+                                setApprovedAds(res.data.approved || []);
                               } catch (error) {
                                 alert('❌ Error: ' + (error.response?.data?.error || error.message));
                               }
@@ -527,7 +527,7 @@ function Display() {
                                   alert('❌ Anuncio rechazado');
                                   const res = await axios.get(`${BACKEND_URL}/api/advertisement/pending`);
                                   setPendingAds(res.data.pending || []);
-                                  setCurrentAd(res.data.current);
+                                  setApprovedAds(res.data.approved || []);
                                 } catch (error) {
                                   alert('❌ Error: ' + (error.response?.data?.error || error.message));
                                 }
@@ -545,48 +545,42 @@ function Display() {
                   )}
                 </div>
                 
-                {/* Anuncio activo simplificado por ahora */}
+                {/* Cola de anuncios aprobados */}
                 <div style={{background: '#1e3a5f', padding: '1.5rem', borderRadius: '10px', border: '2px solid #10b981'}}>
-                  <h4 style={{color: '#10b981', margin: '0 0 1rem 0', fontSize: '1.3rem'}}>✅ Anuncio activo</h4>
-                  {currentAd ? (
-                    <div style={{background: '#0f1f3a', padding: '1rem', borderRadius: '8px'}}>
-                      <p style={{color: 'white', margin: '0.5rem 0'}}>👤 <strong>{currentAd.uploadedBy}</strong></p>
-                      <p style={{color: '#8b9cb5', margin: '0.5rem 0'}}>📁 {currentAd.filename}</p>
-                      <p style={{color: '#8b9cb5', margin: '0.5rem 0'}}>Reproducido: {currentAd.playCount || 0} vez(ces)</p>
-                      <div style={{marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
-                        <button 
-                          onClick={async () => {
-                            try {
-                              await axios.post(`${BACKEND_URL}/api/advertisement/test-trigger`);
-                              alert('🎬 Anuncio activado manualmente. Ve a la pantalla de video para verlo.');
-                            } catch (error) {
-                              alert('❌ Error: ' + (error.response?.data?.error || error.message));
-                            }
-                          }}
-                          style={{padding: '0.6rem 1.2rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
-                        >
-                          🎬 Probar Anuncio
-                        </button>
-                        <button 
-                          onClick={async () => {
-                            if (window.confirm('¿Eliminar anuncio activo?')) {
+                  <h4 style={{color: '#10b981', margin: '0 0 1rem 0', fontSize: '1.3rem'}}>✅ Cola de anuncios aprobados ({approvedAds?.length || 0})</h4>
+                  {approvedAds && approvedAds.length > 0 ? (
+                    <>
+                      {approvedAds.length > 0 && (
+                        <div style={{marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                          <button 
+                            onClick={async () => {
                               try {
-                                await axios.delete(`${BACKEND_URL}/api/advertisement`);
-                                setCurrentAd(null);
-                                alert('✅ Anuncio eliminado');
+                                await axios.post(`${BACKEND_URL}/api/advertisement/test-trigger`);
+                                alert('🎬 Anuncio activado manualmente. Ve a la pantalla de video para verlo.');
                               } catch (error) {
                                 alert('❌ Error: ' + (error.response?.data?.error || error.message));
                               }
-                            }
-                          }}
-                          style={{padding: '0.6rem 1.2rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
-                        >
-                          🗑️ Eliminar
-                        </button>
-                      </div>
-                    </div>
+                            }}
+                            style={{padding: '0.6rem 1.2rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
+                          >
+                            🎬 Probar Próximo Anuncio
+                          </button>
+                        </div>
+                      )}
+                      {approvedAds.map((ad, index) => (
+                        <div key={ad.id || index} style={{background: '#0f1f3a', padding: '1rem', marginBottom: '1rem', borderRadius: '8px', border: index === 0 ? '2px solid #10b981' : '1px solid #3b82f6'}}>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem'}}>
+                            {index === 0 ? <span style={{fontSize: '1.2rem'}}>▶️</span> : <span style={{color: '#8b9cb5'}}>#{index + 1}</span>}
+                            <p style={{color: 'white', margin: 0}}>👤 <strong>{ad.uploadedBy}</strong></p>
+                          </div>
+                          <p style={{color: '#8b9cb5', margin: '0.5rem 0', fontSize: '0.9rem'}}>📁 {ad.filename}</p>
+                          <p style={{color: '#8b9cb5', margin: '0.5rem 0', fontSize: '0.9rem'}}>📅 {new Date(ad.approvedAt).toLocaleString('es-CO')}</p>
+                          {index === 0 && <p style={{color: '#10b981', margin: '0.5rem 0', fontSize: '0.9rem', fontWeight: 'bold'}}>Próximo en reproducirse</p>}
+                        </div>
+                      ))}
+                    </>
                   ) : (
-                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncio activo</p>
+                    <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncios aprobados en cola</p>
                   )}
                 </div>
               </div>

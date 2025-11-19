@@ -94,23 +94,22 @@ let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
 
 // Cargar datos de anuncios
-const adsData = readData(ADS_FILE, { current: null, pending: [], songsPlayed: 0 });
-let currentAdvertisement = adsData.current; // { filename, uploadedAt, uploadedBy, approved, playCount }
+const adsData = readData(ADS_FILE, { approved: [], pending: [], songsPlayed: 0 });
+let approvedAdvertisements = adsData.approved || []; // Cola de anuncios aprobados
 let pendingAdvertisements = adsData.pending; // Anuncios esperando aprobación
 let songsPlayedSinceAd = adsData.songsPlayed || 0; // Contador de canciones desde último anuncio
 
-console.log(`📺 Anuncios cargados: ${pendingAdvertisements.length} pendientes, ${currentAdvertisement ? '1 activo' : '0 activos'}`);
-if (currentAdvertisement) {
-  console.log(`📺 Anuncio activo: ${currentAdvertisement.filename}`);
-  console.log(`📺 Subido por: ${currentAdvertisement.uploadedBy}`);
-  console.log(`📺 Aprobado: ${currentAdvertisement.approved ? 'SÍ' : 'NO'}`);
+console.log(`📺 Anuncios cargados: ${pendingAdvertisements.length} pendientes, ${approvedAdvertisements.length} aprobados en cola`);
+if (approvedAdvertisements.length > 0) {
+  console.log(`📺 Próximo anuncio: ${approvedAdvertisements[0].filename}`);
+  console.log(`📺 Subido por: ${approvedAdvertisements[0].uploadedBy}`);
   console.log(`📺 Canciones desde último anuncio: ${songsPlayedSinceAd}/4`);
 }
 
 // Función para guardar datos de anuncios
 const saveAdsData = () => {
   writeData(ADS_FILE, {
-    current: currentAdvertisement,
+    approved: approvedAdvertisements,
     pending: pendingAdvertisements,
     songsPlayed: songsPlayedSinceAd
   });
@@ -715,11 +714,11 @@ app.get('/api/advertisement/current', (req, res) => {
 app.get('/api/advertisement/pending', (req, res) => {
   console.log('📋 Solicitando anuncios pendientes:', {
     pendingCount: pendingAdvertisements.length,
-    hasCurrent: !!currentAdvertisement
+    approvedCount: approvedAdvertisements.length
   });
   res.json({
     pending: pendingAdvertisements,
-    current: currentAdvertisement
+    approved: approvedAdvertisements
   });
 });
 
@@ -735,45 +734,35 @@ app.post('/api/advertisement/approve/:id', async (req, res) => {
 
     const approvedAd = pendingAdvertisements[adIndex];
     
-    // Eliminar anuncio activo anterior si existe
-    if (currentAdvertisement && currentAdvertisement.filename) {
-      const oldFilePath = join(adsDir, currentAdvertisement.filename);
-      if (existsSync(oldFilePath)) {
-        try {
-          unlinkSync(oldFilePath);
-        } catch (err) {
-          console.error('Error eliminando anuncio anterior:', err);
-        }
-      }
-    }
-
-    // Activar el nuevo anuncio
-    currentAdvertisement = {
+    // Agregar a la cola de aprobados (NO eliminar los anteriores)
+    const newApprovedAd = {
       ...approvedAd,
       approved: true,
       approvedAt: new Date().toISOString(),
       playCount: 0
     };
+    
+    approvedAdvertisements.push(newApprovedAd);
 
     // Remover de pendientes
     pendingAdvertisements.splice(adIndex, 1);
 
-    songsPlayedSinceAd = 0;
     saveAdsData(); // Guardar cambios
 
     // Notificar a todos
     io.emit('advertisement-approved', {
       username: approvedAd.uploadedBy,
-      message: '✅ Tu anuncio ha sido aprobado y se reproducirá cada 4 canciones'
+      message: `✅ Tu anuncio ha sido aprobado. Posición en cola: ${approvedAdvertisements.length}`
     });
 
     res.json({
       success: true,
       message: 'Anuncio aprobado exitosamente',
-      advertisement: currentAdvertisement
+      advertisement: newApprovedAd,
+      queuePosition: approvedAdvertisements.length
     });
 
-    console.log(`✅ Anuncio aprobado: ${approvedAd.uploadedBy}`);
+    console.log(`✅ Anuncio aprobado: ${approvedAd.uploadedBy} - Posición ${approvedAdvertisements.length} en cola`);
   } catch (error) {
     console.error('Error aprobando anuncio:', error);
     res.status(500).json({ error: 'Error al aprobar el anuncio' });
@@ -820,57 +809,71 @@ app.delete('/api/advertisement/reject/:id', async (req, res) => {
   }
 });
 
-// Eliminar anuncio activo (admin)
+// Eliminar todos los anuncios aprobados (admin)
 app.delete('/api/advertisement', async (req, res) => {
   try {
-    if (!currentAdvertisement) {
-      return res.json({ success: true, message: 'No hay anuncio para eliminar' });
+    if (approvedAdvertisements.length === 0) {
+      return res.json({ success: true, message: 'No hay anuncios para eliminar' });
     }
 
-    const filePath = join(adsDir, currentAdvertisement.filename);
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
+    let deletedCount = 0;
+    // Eliminar todos los archivos de anuncios aprobados
+    for (const ad of approvedAdvertisements) {
+      const filePath = join(adsDir, ad.filename);
+      if (existsSync(filePath)) {
+        try {
+          unlinkSync(filePath);
+          deletedCount++;
+        } catch (err) {
+          console.error(`Error eliminando ${ad.filename}:`, err);
+        }
+      }
     }
 
-    currentAdvertisement = null;
+    approvedAdvertisements = [];
     songsPlayedSinceAd = 0;
     saveAdsData(); // Guardar cambios
     
-    io.emit('advertisement-update', null);
+    io.emit('advertisement-queue-update', { remaining: 0, next: null });
 
-    res.json({ success: true, message: 'Anuncio eliminado exitosamente' });
-    console.log('📺 Anuncio eliminado por el administrador');
+    res.json({ success: true, message: `${deletedCount} anuncios eliminados exitosamente` });
+    console.log(`📺 ${deletedCount} anuncios eliminados por el administrador`);
   } catch (error) {
-    console.error('Error eliminando anuncio:', error);
-    res.status(500).json({ error: 'Error al eliminar el anuncio' });
+    console.error('Error eliminando anuncios:', error);
+    res.status(500).json({ error: 'Error al eliminar los anuncios' });
   }
 });
 
-// Endpoint de prueba: forzar reproducción de anuncio (admin)
+// Endpoint de prueba: forzar reproducción del próximo anuncio (admin)
 app.post('/api/advertisement/test-trigger', async (req, res) => {
   try {
-    if (!currentAdvertisement || !currentAdvertisement.approved) {
+    if (approvedAdvertisements.length === 0) {
       return res.status(404).json({ 
-        error: 'No hay anuncio activo aprobado para reproducir' 
+        error: 'No hay anuncios aprobados en la cola para reproducir' 
       });
     }
 
+    const nextAd = approvedAdvertisements[0];
+    
     // Construir URL completa del anuncio
-    const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`;
+    const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${nextAd.filename}`;
     
     // Emitir el evento manualmente
     io.emit('show-advertisement', {
       url: adUrl,
-      uploadedBy: currentAdvertisement.uploadedBy,
-      filename: currentAdvertisement.filename
+      uploadedBy: nextAd.uploadedBy,
+      filename: nextAd.filename,
+      id: nextAd.id
     });
 
-    console.log(`🎬 PRUEBA: Anuncio forzado manualmente - ${adUrl}`);
+    console.log(`🎬 PRUEBA: Próximo anuncio forzado manualmente - ${adUrl}`);
+    console.log(`🎬 Quedan ${approvedAdvertisements.length} anuncios en cola`);
 
     res.json({ 
       success: true, 
-      message: 'Anuncio activado manualmente',
-      url: adUrl
+      message: 'Próximo anuncio activado manualmente',
+      url: adUrl,
+      queueRemaining: approvedAdvertisements.length
     });
   } catch (error) {
     console.error('Error activando anuncio de prueba:', error);
@@ -1207,21 +1210,25 @@ io.on('connection', (socket) => {
 
   // Evento cuando termina un anuncio
   socket.on('advertisement-ended', () => {
-    console.log('📺 Anuncio finalizado - eliminando archivo');
+    console.log('📺 Anuncio finalizado - eliminando de la cola');
     
-    if (currentAdvertisement && currentAdvertisement.playCount >= 1) {
-      const filePath = join(adsDir, currentAdvertisement.filename);
+    if (approvedAdvertisements.length > 0) {
+      const finishedAd = approvedAdvertisements.shift(); // Remover el primero de la cola
+      const filePath = join(adsDir, finishedAd.filename);
       if (existsSync(filePath)) {
         try {
           unlinkSync(filePath);
-          console.log('🗑️ Anuncio eliminado automáticamente después de reproducirse');
+          console.log(`🗑️ Anuncio eliminado: ${finishedAd.filename}`);
+          console.log(`📺 Anuncios restantes en cola: ${approvedAdvertisements.length}`);
         } catch (err) {
           console.error('Error eliminando anuncio:', err);
         }
       }
-      currentAdvertisement = null;
       saveAdsData();
-      io.emit('advertisement-update', null);
+      io.emit('advertisement-queue-update', {
+        remaining: approvedAdvertisements.length,
+        next: approvedAdvertisements[0] || null
+      });
     }
   });
 
@@ -1229,24 +1236,27 @@ io.on('connection', (socket) => {
   socket.on('play-next', () => {
     console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
     
-    // Verificar si debe mostrar anuncio cada 4 canciones y si está aprobado
-    if (currentAdvertisement && currentAdvertisement.approved && songsPlayedSinceAd >= 4) {
+    // Verificar si debe mostrar anuncio cada 4 canciones y si hay anuncios en cola
+    if (approvedAdvertisements.length > 0 && songsPlayedSinceAd >= 4) {
       songsPlayedSinceAd = 0;
-      currentAdvertisement.playCount = (currentAdvertisement.playCount || 0) + 1;
+      
+      // Tomar el primer anuncio de la cola
+      const currentAd = approvedAdvertisements[0];
       
       // Construir URL completa del anuncio
-      const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`;
+      const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAd.filename}`;
       
       io.emit('show-advertisement', {
         url: adUrl,
-        uploadedBy: currentAdvertisement.uploadedBy,
-        filename: currentAdvertisement.filename
+        uploadedBy: currentAd.uploadedBy,
+        filename: currentAd.filename,
+        id: currentAd.id
       });
       
       console.log(`📺 Mostrando anuncio: ${adUrl}`);
-      console.log(`📺 Reproducción #${currentAdvertisement.playCount} - Después de 4 canciones`);
+      console.log(`📺 Subido por: ${currentAd.uploadedBy} - Quedan ${approvedAdvertisements.length - 1} en cola`);
       
-      saveAdsData(); // Guardar cambios del playCount
+      saveAdsData(); // Guardar cambios
       
       // NO eliminar aquí - esperar a que el frontend confirme que terminó
       
