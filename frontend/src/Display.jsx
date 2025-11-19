@@ -551,23 +551,39 @@ function Display() {
                   {currentAd ? (
                     <div style={{background: '#0f1f3a', padding: '1rem', borderRadius: '8px'}}>
                       <p style={{color: 'white', margin: '0.5rem 0'}}>👤 <strong>{currentAd.uploadedBy}</strong></p>
+                      <p style={{color: '#8b9cb5', margin: '0.5rem 0'}}>📁 {currentAd.filename}</p>
                       <p style={{color: '#8b9cb5', margin: '0.5rem 0'}}>Reproducido: {currentAd.playCount || 0} vez(ces)</p>
-                      <button 
-                        onClick={async () => {
-                          if (window.confirm('¿Eliminar anuncio activo?')) {
+                      <div style={{marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                        <button 
+                          onClick={async () => {
                             try {
-                              await axios.delete(`${BACKEND_URL}/api/advertisement`);
-                              setCurrentAd(null);
-                              alert('✅ Anuncio eliminado');
+                              await axios.post(`${BACKEND_URL}/api/advertisement/test-trigger`);
+                              alert('🎬 Anuncio activado manualmente. Ve a la pantalla de video para verlo.');
                             } catch (error) {
                               alert('❌ Error: ' + (error.response?.data?.error || error.message));
                             }
-                          }
-                        }}
-                        style={{marginTop: '1rem', padding: '0.6rem 1.2rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
-                      >
-                        🗑️ Eliminar
-                      </button>
+                          }}
+                          style={{padding: '0.6rem 1.2rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
+                        >
+                          🎬 Probar Anuncio
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm('¿Eliminar anuncio activo?')) {
+                              try {
+                                await axios.delete(`${BACKEND_URL}/api/advertisement`);
+                                setCurrentAd(null);
+                                alert('✅ Anuncio eliminado');
+                              } catch (error) {
+                                alert('❌ Error: ' + (error.response?.data?.error || error.message));
+                              }
+                            }
+                          }}
+                          style={{padding: '0.6rem 1.2rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <p style={{color: '#e2e8f0', textAlign: 'center', padding: '2rem', margin: 0}}>No hay anuncio activo</p>

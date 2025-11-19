@@ -846,6 +846,38 @@ app.delete('/api/advertisement', async (req, res) => {
   }
 });
 
+// Endpoint de prueba: forzar reproducción de anuncio (admin)
+app.post('/api/advertisement/test-trigger', async (req, res) => {
+  try {
+    if (!currentAdvertisement || !currentAdvertisement.approved) {
+      return res.status(404).json({ 
+        error: 'No hay anuncio activo aprobado para reproducir' 
+      });
+    }
+
+    // Construir URL completa del anuncio
+    const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`;
+    
+    // Emitir el evento manualmente
+    io.emit('show-advertisement', {
+      url: adUrl,
+      uploadedBy: currentAdvertisement.uploadedBy,
+      filename: currentAdvertisement.filename
+    });
+
+    console.log(`🎬 PRUEBA: Anuncio forzado manualmente - ${adUrl}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Anuncio activado manualmente',
+      url: adUrl
+    });
+  } catch (error) {
+    console.error('Error activando anuncio de prueba:', error);
+    res.status(500).json({ error: 'Error al activar el anuncio' });
+  }
+});
+
 // API Routes
 
 // Health check endpoint
