@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
@@ -644,7 +644,7 @@ const upload = multer({
 });
 
 // Subir anuncio (cliente)
-app.post('/api/advertisement/upload', upload.single('video'), (req, res) => {
+app.post('/api/advertisement/upload', upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se recibió ningún archivo' });
@@ -657,7 +657,6 @@ app.post('/api/advertisement/upload', upload.single('video'), (req, res) => {
       const oldFilePath = join(adsDir, currentAdvertisement.filename);
       if (existsSync(oldFilePath)) {
         try {
-          const { unlinkSync } = await import('fs');
           unlinkSync(oldFilePath);
         } catch (err) {
           console.error('Error eliminando anuncio anterior:', err);
@@ -698,7 +697,7 @@ app.get('/api/advertisement/current', (req, res) => {
 });
 
 // Eliminar anuncio (admin)
-app.delete('/api/advertisement', (req, res) => {
+app.delete('/api/advertisement', async (req, res) => {
   try {
     if (!currentAdvertisement) {
       return res.json({ success: true, message: 'No hay anuncio para eliminar' });
@@ -706,7 +705,6 @@ app.delete('/api/advertisement', (req, res) => {
 
     const filePath = join(adsDir, currentAdvertisement.filename);
     if (existsSync(filePath)) {
-      const { unlinkSync } = await import('fs');
       unlinkSync(filePath);
     }
 
