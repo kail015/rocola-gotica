@@ -860,6 +860,31 @@ io.on('connection', (socket) => {
 
   // Agregar canción a la cola
   socket.on('add-song', (song) => {
+    // Verificar límite de 3 canciones consecutivas por usuario
+    const username = song.addedBy;
+    if (username) {
+      // Contar canciones consecutivas del usuario desde el final de la cola
+      let consecutiveCount = 0;
+      for (let i = queue.length - 1; i >= 0; i--) {
+        if (queue[i].addedBy === username) {
+          consecutiveCount++;
+        } else {
+          // Si encontramos una canción de otro usuario, detenemos el conteo
+          break;
+        }
+      }
+      
+      // Si ya tiene 3 canciones consecutivas, rechazar
+      if (consecutiveCount >= 3) {
+        socket.emit('song-limit-reached', {
+          message: `Has alcanzado el límite de 3 canciones seguidas. Espera a que otro usuario agregue una canción.`,
+          consecutiveCount
+        });
+        console.log(`❌ Usuario ${username} alcanzó límite de 3 canciones consecutivas`);
+        return;
+      }
+    }
+    
     const newSong = {
       ...song,
       id: Date.now().toString(),
@@ -873,7 +898,7 @@ io.on('connection', (socket) => {
     writeData(QUEUE_FILE, queue);
     
     io.emit('queue-update', queue);
-    console.log(`Canción agregada: ${song.title}`);
+    console.log(`Canción agregada: ${song.title} por ${song.addedBy || 'anónimo'}`);
   });
 
   // Dar like a una canción

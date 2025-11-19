@@ -94,6 +94,10 @@ function App() {
       setMenu(updatedMenu);
     });
 
+    socket.on('song-limit-reached', ({ message }) => {
+      alert(`⚠️ ${message}`);
+    });
+
     // Cargar datos iniciales
     loadInitialData();
 
@@ -104,6 +108,7 @@ function App() {
       socket.off('private-chat-message');
       socket.off('users-count');
       socket.off('menu-update');
+      socket.off('song-limit-reached');
       socket.disconnect();
     };
   }, [userId]);
