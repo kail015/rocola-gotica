@@ -249,6 +249,9 @@ function Display() {
                   <div className="next-info">
                     <p className="next-title">{song.title}</p>
                     <p className="next-artist">{song.channelTitle}</p>
+                    {song.addedBy && (
+                      <p className="song-added-by">👤 {song.addedBy}</p>
+                    )}
                   </div>
                   <span className="next-likes">❤️ {song.likes}</span>
                   <button 
