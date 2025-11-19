@@ -291,9 +291,6 @@ function App() {
         <p className="header-subtitle">
           ⚠️ Las canciones con contenido explícito o que no vayan con la temática del bar podrán ser eliminadas
         </p>
-        <div className="wompi-banner">
-          💰 Haz que tu canción suene primero por $1,000 • Paga con Wompi ⚡
-        </div>
       </header>
 
       <main className="main-content">

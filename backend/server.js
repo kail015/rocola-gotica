@@ -78,13 +78,7 @@ queue = queue.map(song => ({
 }));
 
 let chatMessages = readData(CHAT_FILE, []);
-let menu = readData(MENU_FILE, [
-  { id: 1, name: 'Cerveza Nacional', price: 3000, category: 'Bebidas' },
-  { id: 2, name: 'Cerveza Importada', price: 5000, category: 'Bebidas' },
-  { id: 3, name: 'Cocktail de la Casa', price: 8000, category: 'Bebidas' },
-  { id: 4, name: 'Picada Sencilla', price: 15000, category: 'Comida' },
-  { id: 5, name: 'Picada Especial', price: 25000, category: 'Comida' }
-]);
+let menu = readData(MENU_FILE, []);
 
 let currentSong = null;
 let connectedUsers = 0;
