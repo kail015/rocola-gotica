@@ -805,7 +805,8 @@
   gap: 2rem;
   padding: 1.5rem;
   overflow-y: auto;
-  max-height: calc(80vh - 100px);
+  flex: 1;
+  background: rgba(10, 22, 40, 0.5);
 }
 
 .ad-section {
@@ -822,10 +823,11 @@
 }
 
 .no-ads {
-  color: #8b9cb5;
+  color: #e2e8f0;
   text-align: center;
   padding: 2rem;
   font-style: italic;
+  font-size: 1rem;
 }
 
 .ad-list {
