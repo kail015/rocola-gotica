@@ -288,6 +288,8 @@ function VideoScreen() {
               className="youtube-fullscreen"
             />
           )}
+          {/* Ocultar overlay cuando es anuncio */}
+          {!currentSong.isAdvertisement && (
           <div className="video-info-overlay">
             <div className="video-header-logo">
               <img src="/logogotica.png" alt="Ciudad Gótica" className="video-logo" />
@@ -344,6 +346,7 @@ function VideoScreen() {
               )}
             </div>
           </div>
+          )}
         </div>
       ) : (
         <div className="waiting-screen">
