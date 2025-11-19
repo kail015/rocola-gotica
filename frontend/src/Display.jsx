@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import axios from 'axios';
 import './Display.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
@@ -274,6 +275,29 @@ function Display() {
           title="Gestionar Menú"
         >
           🍽️ Menú
+        </button>
+
+        {/* Botón para gestionar publicidad */}
+        <button 
+          className="ad-toggle-btn"
+          onClick={async () => {
+            try {
+              const response = await axios.get(`${BACKEND_URL}/api/advertisement/current`);
+              if (response.data.advertisement) {
+                if (window.confirm('¿Deseas eliminar el video publicitario actual?')) {
+                  await axios.delete(`${BACKEND_URL}/api/advertisement`);
+                  alert('✅ Anuncio eliminado exitosamente');
+                }
+              } else {
+                alert('ℹ️ No hay anuncios activos');
+              }
+            } catch (error) {
+              alert('❌ Error: ' + (error.response?.data?.error || error.message));
+            }
+          }}
+          title="Gestionar Publicidad"
+        >
+          📺 Ads
         </button>
 
         {/* Chat flotante para admin */}

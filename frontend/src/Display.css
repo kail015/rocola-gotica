@@ -693,6 +693,29 @@
   box-shadow: 0 6px 20px rgba(255, 145, 77, 0.6);
 }
 
+/* Botón de gestión de publicidad */
+.ad-toggle-btn {
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s;
+}
+
+.ad-toggle-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
 /* Panel de gestión del menú */
 .menu-manager-widget {
   position: fixed;

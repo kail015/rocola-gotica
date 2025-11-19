@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateNequiPayment, checkPaymentStatus } from './nequi-payment.js';
 import { WompiPayment } from './wompi-payment.js';
 import { ConfigLoader } from './config-loader.js';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -38,6 +39,13 @@ const dataDir = join(__dirname, 'data');
 if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
 }
+
+// Crear carpeta para anuncios
+const adsDir = join(__dirname, 'ads');
+if (!existsSync(adsDir)) {
+  mkdirSync(adsDir, { recursive: true });
+}
+app.use('/ads', express.static(adsDir));
 
 // Archivos de datos
 const QUEUE_FILE = join(dataDir, 'queue.json');
@@ -83,6 +91,8 @@ let menu = readData(MENU_FILE, []);
 let currentSong = null;
 let connectedUsers = 0;
 let pendingPayments = {}; // { reference: { songId, amount, timestamp } }
+let currentAdvertisement = null; // { filename, uploadedAt, uploadedBy }
+let songsPlayedSinceAd = 0; // Contador de canciones desde último anuncio
 
 // Caché de búsquedas de YouTube (reduce consumo de API)
 const searchCache = new Map();
@@ -606,6 +616,113 @@ app.get('/api/payment/wompi/status/:reference', async (req, res) => {
   }
 });
 
+// ============= ADVERTISEMENT ENDPOINTS =============
+
+// Configurar multer para subir videos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, adsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `ad_${Date.now()}_${file.originalname}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB máximo
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos de video'));
+    }
+  }
+});
+
+// Subir anuncio (cliente)
+app.post('/api/advertisement/upload', upload.single('video'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ningún archivo' });
+    }
+
+    const { username } = req.body;
+
+    // Eliminar anuncio anterior si existe
+    if (currentAdvertisement && currentAdvertisement.filename) {
+      const oldFilePath = join(adsDir, currentAdvertisement.filename);
+      if (existsSync(oldFilePath)) {
+        try {
+          const { unlinkSync } = await import('fs');
+          unlinkSync(oldFilePath);
+        } catch (err) {
+          console.error('Error eliminando anuncio anterior:', err);
+        }
+      }
+    }
+
+    currentAdvertisement = {
+      filename: req.file.filename,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: username || 'Anónimo',
+      size: req.file.size
+    };
+
+    songsPlayedSinceAd = 0;
+
+    io.emit('advertisement-update', currentAdvertisement);
+
+    res.json({
+      success: true,
+      message: 'Anuncio subido exitosamente',
+      advertisement: currentAdvertisement
+    });
+
+    console.log(`📺 Nuevo anuncio subido por ${username || 'Anónimo'}: ${req.file.filename}`);
+  } catch (error) {
+    console.error('Error subiendo anuncio:', error);
+    res.status(500).json({ error: 'Error al subir el anuncio' });
+  }
+});
+
+// Obtener anuncio actual
+app.get('/api/advertisement/current', (req, res) => {
+  res.json({
+    advertisement: currentAdvertisement,
+    songsUntilAd: currentAdvertisement ? Math.max(0, 4 - songsPlayedSinceAd) : null
+  });
+});
+
+// Eliminar anuncio (admin)
+app.delete('/api/advertisement', (req, res) => {
+  try {
+    if (!currentAdvertisement) {
+      return res.json({ success: true, message: 'No hay anuncio para eliminar' });
+    }
+
+    const filePath = join(adsDir, currentAdvertisement.filename);
+    if (existsSync(filePath)) {
+      const { unlinkSync } = await import('fs');
+      unlinkSync(filePath);
+    }
+
+    currentAdvertisement = null;
+    songsPlayedSinceAd = 0;
+
+    io.emit('advertisement-update', null);
+
+    res.json({ success: true, message: 'Anuncio eliminado exitosamente' });
+    console.log('📺 Anuncio eliminado por el administrador');
+  } catch (error) {
+    console.error('Error eliminando anuncio:', error);
+    res.status(500).json({ error: 'Error al eliminar el anuncio' });
+  }
+});
+
 // API Routes
 
 // Health check endpoint
@@ -936,17 +1053,31 @@ io.on('connection', (socket) => {
   // Reproducir siguiente canción
   socket.on('play-next', () => {
     console.log('play-next recibido. Cola actual:', queue.length, 'canciones');
+    
+    // Verificar si debe mostrar anuncio cada 4 canciones
+    if (currentAdvertisement && songsPlayedSinceAd >= 4) {
+      songsPlayedSinceAd = 0;
+      io.emit('show-advertisement', {
+        url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`,
+        ...currentAdvertisement
+      });
+      console.log('📺 Mostrando anuncio después de 4 canciones');
+      return;
+    }
+    
     if (queue.length > 0) {
       // Ordenar la cola correctamente (prioritarias primero, luego por likes)
       sortQueue(queue);
       currentSong = queue.shift();
       writeData(QUEUE_FILE, queue);
       
+      songsPlayedSinceAd++;
+      
       io.emit('current-song', currentSong);
       io.emit('queue-update', queue);
       
       const priorityType = currentSong.paidPriority ? '💰 PAGADA' : (currentSong.priority ? '❤️ LIKES' : '🎵 NORMAL');
-      console.log(`✅ Reproduciendo: ${currentSong.title} [${priorityType}]. Quedan ${queue.length} en cola`);
+      console.log(`✅ Reproduciendo: ${currentSong.title} [${priorityType}]. Quedan ${queue.length} en cola. Canciones desde anuncio: ${songsPlayedSinceAd}`);
     } else {
       currentSong = null;
       io.emit('current-song', null);

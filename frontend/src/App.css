@@ -1284,3 +1284,56 @@
     height: 28px;
   }
 }
+
+/* Sección de publicidad */
+.ad-upload-section {
+  padding: 2rem;
+  text-align: center;
+}
+
+.ad-info {
+  margin-bottom: 2rem;
+}
+
+.ad-info h3 {
+  color: #ff914d;
+  font-size: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.ad-info p {
+  color: #8b9cb5;
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.ad-note {
+  background: rgba(255, 145, 77, 0.1);
+  padding: 0.8rem;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 145, 77, 0.3);
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.ad-file-input {
+  display: none;
+}
+
+.ad-upload-btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ff914d 0%, #ff7a2f 100%);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 145, 77, 0.4);
+}
+
+.ad-upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 145, 77, 0.6);
+}

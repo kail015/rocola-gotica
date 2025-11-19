@@ -391,6 +391,12 @@ function App() {
           >
             📋 Precios
           </button>
+          <button 
+            className={activeTab === 'ad' ? 'active' : ''}
+            onClick={() => setActiveTab('ad')}
+          >
+            📺 Publicita
+          </button>
         </nav>
 
         {/* Contenido de tabs */}
@@ -533,6 +539,60 @@ function App() {
                   <span className="menu-price">${item.price.toLocaleString()}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Publicita con nosotros */}
+          {activeTab === 'ad' && (
+            <div className="ad-upload-section">
+              <div className="ad-info">
+                <h3>📺 Publicita tu negocio</h3>
+                <p>Sube un video de máximo 10 segundos</p>
+                <p className="ad-note">Se reproducirá cada 4 canciones en la pantalla de video</p>
+              </div>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    // Crear video temporal para verificar duración
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    video.onloadedmetadata = async () => {
+                      window.URL.revokeObjectURL(video.src);
+                      if (video.duration > 10) {
+                        alert('⚠️ El video debe durar máximo 10 segundos');
+                        e.target.value = '';
+                        return;
+                      }
+                      
+                      // Subir video
+                      const formData = new FormData();
+                      formData.append('video', file);
+                      formData.append('username', username);
+                      
+                      try {
+                        const response = await axios.post(`${BACKEND_URL}/api/advertisement/upload`, formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' }
+                        });
+                        if (response.data.success) {
+                          alert('✅ Video publicitario subido exitosamente');
+                          e.target.value = '';
+                        }
+                      } catch (error) {
+                        alert('❌ Error al subir el video: ' + (error.response?.data?.error || error.message));
+                      }
+                    };
+                    video.src = URL.createObjectURL(file);
+                  }
+                }}
+                className="ad-file-input"
+                id="ad-video-upload"
+              />
+              <label htmlFor="ad-video-upload" className="ad-upload-btn">
+                📤 Seleccionar Video
+              </label>
             </div>
           )}
         </section>
