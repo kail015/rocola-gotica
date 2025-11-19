@@ -23,7 +23,10 @@ services:
       # NEQUI_BUSINESS_PHONE: 3208504177
       # NEQUI_WEBHOOK_SECRET: (crear un secret único)
       # NEQUI_ENV: production
-    disk:
-      name: rocola-data
-      mountPath: /opt/render/project/src/backend/data
-      sizeGB: 1
+    disks:
+      - name: rocola-data
+        mountPath: /opt/render/project/src/backend/data
+        sizeGB: 1
+      - name: rocola-ads
+        mountPath: /opt/render/project/src/backend/ads
+        sizeGB: 1
