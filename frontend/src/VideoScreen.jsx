@@ -75,13 +75,16 @@ function VideoScreen() {
     });
 
     socket.on('show-advertisement', (adData) => {
-      console.log('📺 Mostrando anuncio publicitario');
+      console.log('📺 Evento show-advertisement recibido:', adData);
+      console.log('📺 URL del anuncio:', adData.url);
       setCurrentSong({
         isAdvertisement: true,
         videoUrl: adData.url,
-        title: 'Anuncio Publicitario',
-        uploadedBy: adData.uploadedBy
+        title: '📺 Anuncio Publicitario',
+        uploadedBy: adData.uploadedBy || 'Cliente',
+        channelTitle: `Publicidad de ${adData.uploadedBy || 'Cliente'}`
       });
+      autoPlayTriggeredRef.current = false; // Resetear para que después del anuncio pueda reproducir
     });
 
     socket.on('connect', () => {
@@ -247,9 +250,25 @@ function VideoScreen() {
               key={currentSong.videoUrl}
               src={currentSong.videoUrl}
               autoPlay
+              muted={false}
+              playsInline
+              onLoadStart={() => console.log('📺 Cargando anuncio...')}
+              onCanPlay={() => console.log('📺 Anuncio listo para reproducir')}
+              onPlay={() => console.log('📺 Anuncio reproduciéndose')}
               onEnded={() => {
                 console.log('📺 Anuncio finalizado, reproduciendo siguiente canción');
-                socketRef.current?.emit('play-next');
+                setCurrentSong(null); // Limpiar primero
+                setTimeout(() => {
+                  socketRef.current?.emit('play-next');
+                }, 500);
+              }}
+              onError={(e) => {
+                console.error('❌ Error cargando anuncio:', e);
+                console.error('❌ URL que falló:', currentSong.videoUrl);
+                // Si el anuncio falla, pasar a la siguiente canción
+                setTimeout(() => {
+                  socketRef.current?.emit('play-next');
+                }, 1000);
               }}
               className="advertisement-video"
               controls={false}

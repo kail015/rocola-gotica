@@ -100,6 +100,12 @@ let pendingAdvertisements = adsData.pending; // Anuncios esperando aprobación
 let songsPlayedSinceAd = adsData.songsPlayed || 0; // Contador de canciones desde último anuncio
 
 console.log(`📺 Anuncios cargados: ${pendingAdvertisements.length} pendientes, ${currentAdvertisement ? '1 activo' : '0 activos'}`);
+if (currentAdvertisement) {
+  console.log(`📺 Anuncio activo: ${currentAdvertisement.filename}`);
+  console.log(`📺 Subido por: ${currentAdvertisement.uploadedBy}`);
+  console.log(`📺 Aprobado: ${currentAdvertisement.approved ? 'SÍ' : 'NO'}`);
+  console.log(`📺 Canciones desde último anuncio: ${songsPlayedSinceAd}/4`);
+}
 
 // Función para guardar datos de anuncios
 const saveAdsData = () => {
@@ -1176,12 +1182,17 @@ io.on('connection', (socket) => {
       songsPlayedSinceAd = 0;
       currentAdvertisement.playCount = (currentAdvertisement.playCount || 0) + 1;
       
+      // Construir URL completa del anuncio
+      const adUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`;
+      
       io.emit('show-advertisement', {
-        url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/ads/${currentAdvertisement.filename}`,
-        ...currentAdvertisement
+        url: adUrl,
+        uploadedBy: currentAdvertisement.uploadedBy,
+        filename: currentAdvertisement.filename
       });
       
-      console.log(`📺 Mostrando anuncio después de 4 canciones (reproducción #${currentAdvertisement.playCount})`);
+      console.log(`📺 Mostrando anuncio: ${adUrl}`);
+      console.log(`📺 Reproducción #${currentAdvertisement.playCount} - Después de 4 canciones`);
       
       saveAdsData(); // Guardar cambios del playCount
       
@@ -1203,7 +1214,7 @@ io.on('connection', (socket) => {
         }, 5000); // 5 segundos después de iniciar reproducción
       }
       
-      return;
+      return; // No reproducir canción ahora, el frontend llamará play-next cuando termine el anuncio
     }
     
     if (queue.length > 0) {
