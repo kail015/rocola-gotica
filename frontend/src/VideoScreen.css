@@ -1,7 +1,7 @@
 .video-screen {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, rgba(10, 22, 40, 0.95) 0%, rgba(21, 34, 56, 0.95) 50%, rgba(15, 31, 58, 0.95) 100%),
+  background: linear-gradient(135deg, rgba(5, 10, 20, 0.98) 0%, rgba(10, 15, 25, 0.98) 50%, rgba(8, 12, 22, 0.98) 100%),
               url('/fondo-gotica.png');
   background-size: cover;
   background-position: center;
@@ -23,7 +23,7 @@
 
 /* Columna izquierda - Reproductor */
 .video-column {
-  flex: 0 0 70%;
+  flex: 0 0 75%;
   display: flex;
   flex-direction: column;
   background: #000;
@@ -43,7 +43,7 @@
 /* Info debajo del video */
 .video-info-bottom {
   height: 100px;
-  background: linear-gradient(135deg, #0a1628 0%, #152238 100%);
+  background: linear-gradient(135deg, #050a14 0%, #0a0f19 100%);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -84,8 +84,8 @@
 
 /* Columna derecha - Sidebar */
 .sidebar-column {
-  flex: 0 0 30%;
-  background: linear-gradient(135deg, #0a1628 0%, #152238 50%, #0f1f3a 100%);
+  flex: 0 0 25%;
+  background: linear-gradient(135deg, #050a14 0%, #0a0f19 50%, #080c16 100%);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
