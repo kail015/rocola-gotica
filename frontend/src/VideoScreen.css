@@ -32,7 +32,7 @@
 
 .youtube-player {
   width: 100%;
-  height: calc(100% - 100px);
+  height: calc(100% - 70px);
 }
 
 .youtube-player iframe {
@@ -42,9 +42,9 @@
 
 /* Info debajo del video */
 .video-info-bottom {
-  height: 100px;
+  height: 70px;
   background: linear-gradient(135deg, #050a14 0%, #0a0f19 100%);
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -69,7 +69,7 @@
 
 .song-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -77,8 +77,8 @@
 }
 
 .song-channel {
-  margin: 0.25rem 0;
-  font-size: 0.85rem;
+  margin: 0.15rem 0;
+  font-size: 0.75rem;
   color: #8b9cb5;
 }
 
