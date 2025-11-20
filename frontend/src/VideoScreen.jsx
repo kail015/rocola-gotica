@@ -247,8 +247,8 @@ function VideoScreen() {
           {/* COLUMNA IZQUIERDA - REPRODUCTOR */}
           <div className="video-column">
             {currentSong.isAdvertisement ? (
-            // Mostrar video de publicidad
-            <video
+              // Mostrar video de publicidad
+              <video
               key={currentSong.videoUrl}
               src={currentSong.videoUrl}
               autoPlay
@@ -316,38 +316,38 @@ function VideoScreen() {
               onWaiting={() => console.log('📺 ⏳ Esperando buffer...')}
               onStalled={() => console.log('📺 ⚠️ Video detenido (stalled)')}
               controls={true}
-            />
-          ) : (
-            // Mostrar video de YouTube normal
-            <YouTube
-              key={currentSong.videoId}
-              videoId={currentSong.videoId}
-              opts={opts}
-              onEnd={handleSongEnd}
-              onError={handleError}
-              onReady={handleReady}
-              className="youtube-player"
-            />
-          )}
-          
-          {/* Info del video debajo del reproductor */}
-          {!currentSong.isAdvertisement && (
-            <div className="video-info-bottom">
-              <div className="powered-by-youtube">
-                <span>▶️ Powered by YouTube</span>
-              </div>
-              <div className="current-song-info">
-              {isRandomMode && (
-                <div className="random-mode-badge">
-                  🔀 Reproducción Aleatoria
+              />
+            ) : (
+              // Mostrar video de YouTube normal
+              <YouTube
+                key={currentSong.videoId}
+                videoId={currentSong.videoId}
+                opts={opts}
+                onEnd={handleSongEnd}
+                onError={handleError}
+                onReady={handleReady}
+                className="youtube-player"
+              />
+            )}
+            
+            {/* Info del video debajo del reproductor */}
+            {!currentSong.isAdvertisement && (
+              <div className="video-info-bottom">
+                <div className="powered-by-youtube">
+                  <span>▶️ Powered by YouTube</span>
                 </div>
-              )}
-              <h3 className="song-title">{currentSong.title}</h3>
-              <p className="song-channel">{currentSong.channelTitle}</p>
-              {!isRandomMode && <span className="video-likes">❤️ {currentSong.likes || 0}</span>}
-            </div>
-          </div>
-          )}
+                <div className="current-song-info">
+                  {isRandomMode && (
+                    <div className="random-mode-badge">
+                      🔀 Reproducción Aleatoria
+                    </div>
+                  )}
+                  <h3 className="song-title">{currentSong.title}</h3>
+                  <p className="song-channel">{currentSong.channelTitle}</p>
+                  {!isRandomMode && <span className="video-likes">❤️ {currentSong.likes || 0}</span>}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* COLUMNA DERECHA - LOGO Y COLA */}
@@ -397,6 +397,7 @@ function VideoScreen() {
                   <p className="hint-text">Escanea el QR para agregar</p>
                 </div>
               )}
+            </div>
             
             {/* Footer con créditos */}
             <div className="sidebar-footer">
