@@ -301,7 +301,7 @@ function Display() {
           🍽️ Menú
         </button>
 
-        {/* Botón para gestionar publicidad */}
+        {/* Botón para gestionar publicidad - DESHABILITADO TEMPORALMENTE
         <button 
           className="ad-toggle-btn"
           onClick={() => setShowAdManager(!showAdManager)}
@@ -309,6 +309,7 @@ function Display() {
         >
           📺 Ads {pendingAds.length > 0 && <span className="ad-badge">{pendingAds.length}</span>}
         </button>
+        */}
 
         {/* Chat flotante para admin */}
         <button 
@@ -470,8 +471,8 @@ function Display() {
           </div>
         )}
 
-        {/* Panel de gestión de publicidad */}
-        {showAdManager && (
+        {/* Panel de gestión de publicidad - DESHABILITADO TEMPORALMENTE */}
+        {false && showAdManager && (
           <div className="menu-manager ad-manager">
             <div className="menu-panel">
               <div className="menu-header">
