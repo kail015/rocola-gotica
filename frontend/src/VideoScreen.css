@@ -129,8 +129,10 @@
 }
 
 .qr-section-sidebar {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
 }
 
 .qr-section {
@@ -140,6 +142,7 @@
   background: rgba(255, 145, 77, 0.1);
   border-radius: 10px;
   border: 2px solid rgba(255, 145, 77, 0.3);
+  flex-shrink: 0;
 }
 
 .qr-code {
@@ -160,6 +163,7 @@
   margin: 1.5rem 0 1rem 0;
   text-align: center;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .sidebar-footer {
@@ -172,6 +176,7 @@
   gap: 0.5rem;
   font-size: 0.75rem;
   color: #8b9cb5;
+  flex-shrink: 0;
 }
 
 .lunatica-logo-sidebar {
@@ -529,6 +534,8 @@
   gap: 0.6rem;
   overflow-y: auto;
   padding-right: 0.3rem;
+  flex: 1;
+  min-height: 400px;
 }
 
 .queue-list-video::-webkit-scrollbar {
@@ -581,6 +588,11 @@
   text-align: center;
   padding: 2rem 1rem;
   color: #8b9cb5;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 400px;
 }
 
 .empty-queue-message p {
