@@ -12,6 +12,7 @@ import { generateNequiPayment, checkPaymentStatus } from './nequi-payment.js';
 import { WompiPayment } from './wompi-payment.js';
 import { ConfigLoader } from './config-loader.js';
 import multer from 'multer';
+import ffmpeg from 'fluent-ffmpeg';
 
 dotenv.config();
 
@@ -141,6 +142,20 @@ setInterval(() => {
 console.log('🚀 Servidor iniciando...');
 console.log(`📁 Directorio de datos: ${dataDir}`);
 console.log(`📝 Archivo de cola: ${QUEUE_FILE}`);
+
+// Verificar si FFmpeg está disponible
+let ffmpegAvailable = false;
+ffmpeg.getAvailableFormats((err, formats) => {
+  if (err) {
+    console.warn('⚠️ FFmpeg no está disponible. La conversión automática de videos estará deshabilitada.');
+    console.warn('⚠️ Para habilitar conversión automática, instale FFmpeg: https://ffmpeg.org/download.html');
+    console.warn('⚠️ Ver FFMPEG-INSTALL.md para instrucciones de instalación');
+    ffmpegAvailable = false;
+  } else {
+    console.log('✅ FFmpeg disponible - Conversión automática de videos habilitada');
+    ffmpegAvailable = true;
+  }
+});
 
 // Función para ordenar la cola correctamente
 function sortQueue(queue) {
@@ -656,15 +671,51 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024 // 50MB máximo
   },
   fileFilter: (req, file, cb) => {
-    // Solo aceptar formatos de video compatibles con navegadores
-    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-    if (allowedTypes.includes(file.mimetype)) {
+    // Aceptar cualquier formato de video
+    if (file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error(`Formato no soportado. Use: MP4 (H.264), WebM o OGG. Recibido: ${file.mimetype}`));
+      cb(new Error(`Solo se aceptan archivos de video. Recibido: ${file.mimetype}`));
     }
   }
 });
+
+// Función para convertir video a formato compatible con navegadores
+const convertVideoToCompatibleFormat = (inputPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    console.log('🔄 Convirtiendo video a formato compatible...');
+    console.log('📥 Input:', inputPath);
+    console.log('📤 Output:', outputPath);
+    
+    ffmpeg(inputPath)
+      .videoCodec('libx264')        // Codec H.264 (compatible con todos los navegadores)
+      .audioCodec('aac')            // Codec AAC para audio
+      .outputOptions([
+        '-preset fast',             // Balance entre velocidad y calidad
+        '-crf 23',                  // Calidad (menor = mejor, 23 es bueno)
+        '-movflags +faststart',     // Optimizar para streaming web
+        '-pix_fmt yuv420p'          // Formato de pixel compatible
+      ])
+      .output(outputPath)
+      .on('start', (commandLine) => {
+        console.log('🎬 FFmpeg iniciado:', commandLine);
+      })
+      .on('progress', (progress) => {
+        if (progress.percent) {
+          console.log(`⏳ Progreso: ${Math.round(progress.percent)}%`);
+        }
+      })
+      .on('end', () => {
+        console.log('✅ Conversión completada');
+        resolve();
+      })
+      .on('error', (err) => {
+        console.error('❌ Error en conversión:', err.message);
+        reject(err);
+      })
+      .run();
+  });
+};
 
 // Subir anuncio (cliente)
 app.post('/api/advertisement/upload', upload.single('video'), async (req, res) => {
@@ -674,15 +725,55 @@ app.post('/api/advertisement/upload', upload.single('video'), async (req, res) =
     }
 
     const { username } = req.body;
+    const originalPath = req.file.path;
+    let finalFilename = req.file.filename;
+    let finalSize = req.file.size;
+
+    // Si FFmpeg está disponible, convertir el video
+    if (ffmpegAvailable) {
+      const convertedFilename = `converted_${Date.now()}.mp4`;
+      const convertedPath = join(adsDir, convertedFilename);
+
+      try {
+        console.log('🔄 Iniciando conversión automática del video...');
+        // Convertir el video a formato compatible
+        await convertVideoToCompatibleFormat(originalPath, convertedPath);
+        
+        // Eliminar el archivo original
+        unlinkSync(originalPath);
+        console.log('🗑️ Archivo original eliminado:', originalPath);
+        
+        finalFilename = convertedFilename;
+        // Actualizar tamaño del archivo convertido
+        const { statSync } = await import('fs');
+        finalSize = statSync(convertedPath).size;
+        console.log('✅ Video convertido y listo para aprobación');
+        
+      } catch (conversionError) {
+        // Si falla la conversión, eliminar archivo original y retornar error
+        if (existsSync(originalPath)) {
+          unlinkSync(originalPath);
+        }
+        console.error('❌ Error en conversión de video:', conversionError);
+        return res.status(500).json({ 
+          error: 'Error al procesar el video. Por favor intente con otro archivo.',
+          details: conversionError.message
+        });
+      }
+    } else {
+      console.log('⚠️ FFmpeg no disponible - Video subido sin conversión');
+      console.log('⚠️ Asegúrese de que el video use codec H.264 para compatibilidad con navegadores');
+    }
 
     // Crear anuncio pendiente de aprobación
     const pendingAd = {
       id: Date.now().toString(),
-      filename: req.file.filename,
+      filename: finalFilename,
       uploadedAt: new Date().toISOString(),
       uploadedBy: username || 'Anónimo',
-      size: req.file.size,
-      approved: false
+      size: finalSize,
+      approved: false,
+      converted: ffmpegAvailable
     };
 
     pendingAdvertisements.push(pendingAd);
