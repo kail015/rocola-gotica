@@ -1363,12 +1363,13 @@ io.on('connection', (socket) => {
       writeData(QUEUE_FILE, queue);
       
       songsPlayedSinceAd++;
+      saveAdsData(); // Guardar el contador actualizado
       
       io.emit('current-song', currentSong);
       io.emit('queue-update', queue);
       
       const priorityType = currentSong.paidPriority ? '💰 PAGADA' : (currentSong.priority ? '❤️ LIKES' : '🎵 NORMAL');
-      console.log(`✅ Reproduciendo: ${currentSong.title} [${priorityType}]. Quedan ${queue.length} en cola. Canciones desde anuncio: ${songsPlayedSinceAd}`);
+      console.log(`✅ Reproduciendo: ${currentSong.title} [${priorityType}]. Quedan ${queue.length} en cola. Canciones desde anuncio: ${songsPlayedSinceAd}/4`);
     } else {
       currentSong = null;
       io.emit('current-song', null);
