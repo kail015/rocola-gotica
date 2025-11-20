@@ -364,6 +364,9 @@ function App() {
 
         {/* Barra de búsqueda */}
         <section className="search-section">
+          <div className="youtube-badge">
+            <span>▶️ Powered by YouTube</span>
+          </div>
           <div className="search-bar">
             <input
               type="text"
