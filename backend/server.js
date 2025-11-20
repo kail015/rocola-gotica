@@ -19,6 +19,12 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Configurar ruta de FFmpeg
+if (existsSync('C:\\ffmpeg\\bin\\ffmpeg.exe')) {
+  ffmpeg.setFfmpegPath('C:\\ffmpeg\\bin\\ffmpeg.exe');
+  console.log('🎬 FFmpeg path configurado: C:\\ffmpeg\\bin\\ffmpeg.exe');
+}
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
