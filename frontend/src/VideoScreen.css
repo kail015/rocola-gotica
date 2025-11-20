@@ -13,20 +13,170 @@
   left: 0;
 }
 
-.fullscreen-video {
+/* Layout de 2 columnas */
+.two-column-layout {
+  display: flex;
   width: 100%;
   height: 100%;
+  gap: 0;
+}
+
+/* Columna izquierda - Reproductor */
+.video-column {
+  flex: 0 0 70%;
+  display: flex;
+  flex-direction: column;
+  background: #000;
   position: relative;
 }
 
-.youtube-fullscreen {
+.youtube-player {
+  width: 100%;
+  height: calc(100% - 100px);
+}
+
+.youtube-player iframe {
   width: 100%;
   height: 100%;
 }
 
-.youtube-fullscreen iframe {
-  width: 100%;
-  height: 100%;
+/* Info debajo del video */
+.video-info-bottom {
+  height: 100px;
+  background: linear-gradient(135deg, #0a1628 0%, #152238 100%);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.powered-by-youtube {
+  font-size: 0.75rem;
+  color: #8b9cb5;
+  margin-bottom: 0.5rem;
+}
+
+.powered-by-youtube span {
+  background: rgba(255, 0, 0, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.current-song-info {
+  flex: 1;
+}
+
+.song-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.song-channel {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  color: #8b9cb5;
+}
+
+/* Columna derecha - Sidebar */
+.sidebar-column {
+  flex: 0 0 30%;
+  background: linear-gradient(135deg, #0a1628 0%, #152238 50%, #0f1f3a 100%);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.sidebar-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #ff914d;
+  padding-bottom: 1.5rem;
+}
+
+.sidebar-logo {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 6px solid #ff914d;
+  box-shadow: 0 0 30px rgba(255, 145, 77, 0.6);
+  object-fit: cover;
+  margin-bottom: 1rem;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 145, 77, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 145, 77, 0.9);
+  }
+}
+
+.bar-name {
+  font-size: 1.3rem;
+  color: #ff914d;
+  margin: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.qr-section-sidebar {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.qr-section {
+  text-align: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(255, 145, 77, 0.1);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 145, 77, 0.3);
+}
+
+.qr-code {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.qr-text {
+  color: #e2e8f0;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.queue-title {
+  color: #ff914d;
+  font-size: 1.2rem;
+  margin: 1.5rem 0 1rem 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 145, 77, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #8b9cb5;
+}
+
+.lunatica-logo-sidebar {
+  height: 20px;
+  width: auto;
 }
 
 /* Video de publicidad */
@@ -376,11 +526,9 @@
 .queue-list-video {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-height: calc(100vh - 350px);
+  gap: 0.6rem;
   overflow-y: auto;
   padding-right: 0.3rem;
-  min-height: 150px;
 }
 
 .queue-list-video::-webkit-scrollbar {
@@ -400,19 +548,21 @@
 .queue-item-video {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(21, 34, 56, 0.8);
-  border-radius: 6px;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  background: rgba(15, 31, 58, 0.6);
+  border-radius: 8px;
   transition: all 0.3s;
-  border: 1px solid rgba(255, 145, 77, 0.2);
+  border: 1px solid rgba(255, 145, 77, 0.3);
 }
 
 .queue-item-video:hover {
-  background: rgba(21, 34, 56, 1);
-  transform: translateX(3px);
+  background: rgba(21, 34, 56, 0.9);
   border-color: #ff914d;
+  transform: translateX(3px);
 }
+
+
 
 .priority-queue {
   border: 2px solid #fbbf24 !important;
@@ -452,11 +602,11 @@
 }
 
 .queue-item-video img {
-  width: 45px;
-  height: 34px;
-  border-radius: 4px;
+  width: 50px;
+  height: 38px;
+  border-radius: 6px;
   object-fit: cover;
-  border: 1px solid rgba(255, 145, 77, 0.3);
+  border: 1px solid rgba(255, 145, 77, 0.4);
 }
 
 .queue-song-info {

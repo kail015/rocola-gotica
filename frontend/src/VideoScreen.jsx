@@ -243,8 +243,10 @@ function VideoScreen() {
   return (
     <div className="video-screen">
       {currentSong ? (
-        <div className="fullscreen-video">
-          {currentSong.isAdvertisement ? (
+        <div className="two-column-layout">
+          {/* COLUMNA IZQUIERDA - REPRODUCTOR */}
+          <div className="video-column">
+            {currentSong.isAdvertisement ? (
             // Mostrar video de publicidad
             <video
               key={currentSong.videoUrl}
@@ -324,26 +326,38 @@ function VideoScreen() {
               onEnd={handleSongEnd}
               onError={handleError}
               onReady={handleReady}
-              className="youtube-fullscreen"
+              className="youtube-player"
             />
           )}
-          {/* Ocultar overlay cuando es anuncio */}
+          
+          {/* Info del video debajo del reproductor */}
           {!currentSong.isAdvertisement && (
-          <div className="video-info-overlay">
-            <div className="video-header-logo">
-              <img src="/logogotica.png" alt="Ciudad Gótica" className="video-logo" />
-            </div>
-            <div className="video-info-content">
+            <div className="video-info-bottom">
+              <div className="powered-by-youtube">
+                <span>▶️ Powered by YouTube</span>
+              </div>
+              <div className="current-song-info">
               {isRandomMode && (
                 <div className="random-mode-badge">
                   🔀 Reproducción Aleatoria
                 </div>
               )}
-              <h2>{currentSong.title}</h2>
-              <p>{currentSong.channelTitle}</p>
+              <h3 className="song-title">{currentSong.title}</h3>
+              <p className="song-channel">{currentSong.channelTitle}</p>
               {!isRandomMode && <span className="video-likes">❤️ {currentSong.likes || 0}</span>}
             </div>
-            <div className="queue-sidebar">
+          </div>
+          )}
+          </div>
+
+          {/* COLUMNA DERECHA - LOGO Y COLA */}
+          <div className="sidebar-column">
+            <div className="sidebar-header">
+              <img src="/logogotica.png" alt="Ciudad Gótica Licores" className="sidebar-logo" />
+              <h1 className="bar-name">ROCKOLA CIUDAD GÓTICA LICORES</h1>
+            </div>
+
+            <div className="qr-section-sidebar">
               <div className="qr-section">
                 <QRCodeSVG 
                   value="https://rockola-ciudad-gotica-licores.netlify.app"
@@ -383,9 +397,14 @@ function VideoScreen() {
                   <p className="hint-text">Escanea el QR para agregar</p>
                 </div>
               )}
+            
+            {/* Footer con créditos */}
+            <div className="sidebar-footer">
+              <span>Desarrollado por</span>
+              <img src="/lunatica-logo.png" alt="Lunatica App Solutions" className="lunatica-logo-sidebar" />
+              <span>Lunatica App Solutions</span>
             </div>
           </div>
-          )}
         </div>
       ) : (
         <div className="waiting-screen">
